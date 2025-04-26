@@ -115,3 +115,24 @@
 +	const core = localStorage.getItem("core") || "mkxp-z";
  	loadCore(core);
  });
+--- a/pkg/emscripten/libretro-thread/libretro.worker.js
++++ b/pkg/emscripten/libretro-thread/libretro.worker.js
+@@ -6,12 +6,12 @@ const helper = {};
+ 
+ // this is huge and takes between 2 and 3 minutes to unzip. (10 minutes for firefox?)
+ // luckily it only needs to be done once.
+-const bundlePath = ["assets/frontend/bundle.zip.aa",
+-                    "assets/frontend/bundle.zip.ab",
+-                    "assets/frontend/bundle.zip.ac",
+-                    "assets/frontend/bundle.zip.ad",
+-                    "assets/frontend/bundle.zip.ae"];
+-// ["assets/frontend/bundle-minimal.zip"]
++// const bundlePath = ["assets/frontend/bundle.zip.aa",
++//                     "assets/frontend/bundle.zip.ab",
++//                     "assets/frontend/bundle.zip.ac",
++//                     "assets/frontend/bundle.zip.ad",
++//                     "assets/frontend/bundle.zip.ae"];
++const bundlePath = ["assets/frontend/bundle-minimal.zip"];
+ const removeLeadingZipDirs = 1;
+ 
+ // list of directories to migrate. previously these were mounted in the "userdata" directory. retroarch.cfg is ignored intentionally.

@@ -26,7 +26,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git curl build-essential automake libtool binaryen wabt zip universal-ctags
-          sudo apt install -y meson cmake 7zip-standalone
+          sudo apt install -y meson cmake
 
       - name: Set up WASI SDK
         run: |
@@ -76,15 +76,22 @@ jobs:
 
       - name: Build frontend
         run: |
-          mkdir retroarch-assets
-          cd retroarch-assets
-          curl -Lo retroarch-assets.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z
-          7zz x retroarch-assets.7z
-          cd ..
+          mkdir bundle
+          mkdir bundle/assets
+          mkdir bundle/shaders
+          mv retroarch-assets/COPYING bundle/assets
+          mv retroarch-assets/ozone bundle/assets
+          mv retroarch-assets/pkg bundle/assets
+          mv retroarch-assets/sounds bundle/assets
+          mv retroarch-glsl-shaders/* bundle/shaders
+          zip -r9 bundle-minimal.zip bundle
+
           mkdir retroarch/pkg/emscripten/libretro-thread/assets
-          mv retroarch-assets/retroarch/assets/frontend retroarch/pkg/emscripten/libretro-thread/assets
+          mkdir retroarch/pkg/emscripten/libretro-thread/assets/frontend
+          mv bundle-minimal.zip retroarch/pkg/emscripten/libretro-thread/assets/frontend
           mv retroarch/media retroarch/pkg/emscripten/libretro-thread
           mv coi-serviceworker/coi-serviceworker.js retroarch/pkg/emscripten/libretro-thread
+
           mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
           cd retroarch
           git apply ../retroarch.patch
@@ -97,7 +104,9 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: retroarch/pkg/emscripten/libretro-thread
+          retention-days: 90
 
       - name: Deploy to GitHub Pages
+        id: deployment
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         uses: actions/deploy-pages@v4
