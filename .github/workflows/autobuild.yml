@@ -78,12 +78,11 @@ jobs:
         run: |
           mkdir bundle
           mkdir bundle/assets
-          mkdir bundle/shaders
           mv retroarch-assets/COPYING bundle/assets
+          mv retroarch-assets/glui bundle/assets
           mv retroarch-assets/ozone bundle/assets
           mv retroarch-assets/pkg bundle/assets
           mv retroarch-assets/sounds bundle/assets
-          mv retroarch-glsl-shaders/* bundle/shaders
           zip -r9 bundle-minimal.zip bundle
 
           mkdir retroarch/pkg/emscripten/libretro-thread/assets
