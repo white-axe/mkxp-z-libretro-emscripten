@@ -1,14 +1,18 @@
 --- a/pkg/emscripten/libretro-thread/index.html
 +++ b/pkg/emscripten/libretro-thread/index.html
-@@ -13,6 +13,7 @@
+@@ -13,6 +13,11 @@
  		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
  	</head>
  	<body>
 +		<script src="coi-serviceworker.js"></script>
++		<script>
++			// Send a dummy message every 5 seconds to prevent coi-serviceworker.js from being killed by Firefox for taking too long to fetch large files
++			setInterval(function () { navigator.serviceWorker.controller.postMessage({ type: "heartbeat" }); }, 5000);
++		</script>
  		<!--Navbar-->
  		<div id="navbar">
  			<input type="checkbox" id="menuhider">
-@@ -27,95 +28,7 @@
+@@ -27,95 +32,7 @@
  						<span class="fa fa-caret-down"></span>
  					</label>
  					<div class="dropdown-child ozone-list" id="core-selector">
