@@ -1,0 +1,100 @@
+name: Automatic Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git curl build-essential automake libtool binaryen wabt zip universal-ctags
+          sudo apt install -y meson cmake 7zip-standalone
+
+      - name: Set up WASI SDK
+        run: |
+          curl -Lo ${{ runner.temp }}/wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-21/wasi-sdk-21.0-linux.tar.gz
+          mkdir ${{ runner.temp }}/wasi-sdk
+          tar xzf ${{ runner.temp }}/wasi-sdk.tar.gz -C ${{ runner.temp }}/wasi-sdk --strip-components=1
+          rm ${{ runner.temp }}/wasi-sdk.tar.gz
+
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.6
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build stage 1
+        run: |
+          cd mkxp-z/libretro
+          CLICOLOR_FORCE=1 make -j $(nproc) WASI_SDK=${{ runner.temp }}/wasi-sdk
+
+      - name: Configure core
+        run: |
+          echo "[binaries]" | tee -a ${{ runner.temp }}/cross.ini
+          echo "c = 'emcc'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cpp = 'em++'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "ar = 'emar'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cmake = ['emcmake', 'cmake']" | tee -a ${{ runner.temp }}/cross.ini
+          echo "[host_machine]" | tee -a ${{ runner.temp }}/cross.ini
+          echo "system = 'emscripten'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cpu_family = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cpu = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "endian = 'little'" | tee -a ${{ runner.temp }}/cross.ini
+          echo '--------------------------------------------------------------------------------'
+          cd mkxp-z
+          CLICOLOR_FORCE=1 meson setup build --cross-file ${{ runner.temp }}/cross.ini --buildtype release -Db_lto=true -Dlibretro=true -Demscripten_threaded=true
+
+      - name: Build core
+        run: |
+          cd mkxp-z/build
+          CLICOLOR_FORCE=1 ninja -v
+
+      - name: Build frontend
+        run: |
+          curl -Lo retroarch-assets.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z
+          7zz x retroarch-assets.7z
+          mkdir retroarch/pkg/emscripten/libretro-thread/assets
+          mv retroarch-assets/assets/frontend retroarch/pkg/emscripten/libretro-thread/assets
+          mv retroarch/media retroarch/pkg/emscripten/libretro-thread
+          mv coi-serviceworker/coi-serviceworker.js retroarch/pkg/emscripten/libretro-thread
+          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
+          cd retroarch
+          git apply ../retroarch.patch
+          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AL=0 HAVE_AUDIOWORKLET=1 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
+          mv mkxp-z_libretro.wasm pkg/emscripten/libretro-thread
+          mv mkxp-z_libretro.js pkg/emscripten/libretro-thread
+          mv mkxp-z_libretro.worker.js pkg/emscripten/libretro-thread || true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: retroarch/pkg/emscripten/libretro-thread
+
+      - name: Deploy to GitHub Pages
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        uses: actions/deploy-pages@v4

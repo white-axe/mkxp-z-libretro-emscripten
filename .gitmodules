@@ -1,0 +1,10 @@
+[submodule "mkxp-z"]
+	path = mkxp-z
+	url = https://github.com/white-axe/mkxp-z
+	branch = libretro
+[submodule "retroarch"]
+	path = retroarch
+	url = https://github.com/libretro/RetroArch
+[submodule "coi-serviceworker"]
+	path = coi-serviceworker
+	url = https://github.com/gzuidhof/coi-serviceworker
