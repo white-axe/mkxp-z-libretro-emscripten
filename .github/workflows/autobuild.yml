@@ -76,10 +76,13 @@ jobs:
 
       - name: Build frontend
         run: |
+          mkdir retroarch-assets
+          cd retroarch-assets
           curl -Lo retroarch-assets.7z https://buildbot.libretro.com/nightly/emscripten/RetroArch.7z
           7zz x retroarch-assets.7z
+          cd ..
           mkdir retroarch/pkg/emscripten/libretro-thread/assets
-          mv retroarch-assets/assets/frontend retroarch/pkg/emscripten/libretro-thread/assets
+          mv retroarch-assets/retroarch/assets/frontend retroarch/pkg/emscripten/libretro-thread/assets
           mv retroarch/media retroarch/pkg/emscripten/libretro-thread
           mv coi-serviceworker/coi-serviceworker.js retroarch/pkg/emscripten/libretro-thread
           mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
