@@ -95,7 +95,7 @@ jobs:
           mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
           cd retroarch
           git apply ../retroarch.patch
-          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AL=0 HAVE_AUDIOWORKLET=1 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
+          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_OPENGLES3=1 HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AL=0 HAVE_AUDIOWORKLET=1 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
           mv mkxp-z_libretro.wasm pkg/emscripten/libretro-thread
           mv mkxp-z_libretro.js pkg/emscripten/libretro-thread
           mv mkxp-z_libretro.worker.js pkg/emscripten/libretro-thread || true
