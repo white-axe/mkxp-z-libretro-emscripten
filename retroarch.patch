@@ -105,7 +105,7 @@
 -						<a href="." data-core="wasm4">WASM4</a>
 -						<a href="." data-core="x1">Sharp X1 (X Millenium)</a>
 -						<a href="." data-core="xrick">Rick Dangerous (XRick)</a>
-+						<a href="." data-core="mkxp-z">mkxp-z</a>
++						<a href="." data-core="mkxp-z">RPG Maker XP/VX/VX Ace (mkxp-z)</a>
  					</div>
  				</li>
  				<li id="btnRun" class="disabled">
