@@ -38,7 +38,7 @@ jobs:
       - name: Set up Emscripten SDK
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 4.0.6
+          version: 4.0.8
 
       - name: Checkout
         uses: actions/checkout@v4
