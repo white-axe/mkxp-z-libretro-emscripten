@@ -55,19 +55,8 @@ jobs:
 
       - name: Configure core
         run: |
-          echo "[binaries]" | tee -a ${{ runner.temp }}/cross.ini
-          echo "c = 'emcc'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cpp = 'em++'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "ar = 'emar'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cmake = ['emcmake', 'cmake']" | tee -a ${{ runner.temp }}/cross.ini
-          echo "[host_machine]" | tee -a ${{ runner.temp }}/cross.ini
-          echo "system = 'emscripten'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cpu_family = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cpu = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "endian = 'little'" | tee -a ${{ runner.temp }}/cross.ini
-          echo '--------------------------------------------------------------------------------'
           cd mkxp-z
-          CLICOLOR_FORCE=1 meson setup build --cross-file ${{ runner.temp }}/cross.ini --buildtype release -Db_lto=true -Dlibretro=true -Demscripten_threaded=true
+          CLICOLOR_FORCE=1 meson setup build --cross-file libretro/meson-emscripten.txt --buildtype release -Db_lto=true -Dlibretro=true -Demscripten_threaded=true
 
       - name: Build core
         run: |
