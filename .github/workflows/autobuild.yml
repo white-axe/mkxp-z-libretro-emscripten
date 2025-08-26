@@ -68,7 +68,7 @@ jobs:
           echo "cmake_toolchain_file = '$(em-config EMSCRIPTEN_ROOT)/cmake/Modules/Platform/Emscripten.cmake'" | tee -a ${{ runner.temp }}/cross.ini
           echo '--------------------------------------------------------------------------------'
           cd mkxp-z
-          CLICOLOR_FORCE=1 meson setup build --cross-file ${{ runner.temp }}/cross.ini --buildtype release -Db_lto=true -Dlibretro=true -Demscripten_threaded=true
+          CLICOLOR_FORCE=1 meson setup build --cross-file ${{ runner.temp }}/cross.ini --buildtype release -Db_lto=true -Dlibretro=true -Dlibretro_save_states=true -Demscripten_threaded=true
 
       - name: Build core
         run: |
