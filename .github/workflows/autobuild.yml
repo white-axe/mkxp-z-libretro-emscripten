@@ -41,12 +41,12 @@ jobs:
           version: 4.0.8
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
       - name: Set up Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Build stage 1
         run: |
@@ -101,7 +101,7 @@ jobs:
           mv mkxp-z_libretro.js pkg/emscripten/libretro-thread/mkxp-z_libretro.js
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: retroarch/pkg/emscripten/libretro-thread
           retention-days: 90
