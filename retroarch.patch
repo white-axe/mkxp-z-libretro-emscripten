@@ -1,3 +1,98 @@
+--- a/pkg/emscripten/libretro-thread/core_list.js
++++ b/pkg/emscripten/libretro-thread/core_list.js
+@@ -1,91 +1,3 @@
+ const libretroCores = {
+-	"2048": "2048",
+-	"anarch": "Anarch",
+-	"ardens": "Arduboy (Ardens)",
+-	"arduous": "Arduboy (Arduous)",
+-	"bk": "Elektronika - BK-0010/BK-0011 (BK)",
+-	"chailove": "ChaiLove",
+-	"craft": "Minecraft (Craft)",
+-	"DoubleCherryGB": "Nintendo - Game Boy / Color (DoubleCherryGB)",
+-	"ecwolf": "Wolfenstein 3D (ECWolf)",
+-	"fbalpha2012": "Arcade (FB Alpha 2012)",
+-	"fbalpha2012_cps1": "Arcade (FB Alpha 2012 CPS1)",
+-	"fbalpha2012_cps2": "Arcade (FB Alpha 2012 CPS2)",
+-	"fbalpha2012_neogeo": "Arcade (FB Alpha 2012 NeoGeo)",
+-	"fceumm": "Nintendo - NES / Famicom (FCEUmm)",
+-	"freechaf": "Fairchild ChannelF (FreeChaF)",
+-	"galaksija": "Galaksija",
+-	"gambatte": "Nintendo - Game Boy / Color (Gambatte)",
+-	"gme": "Game Music Emu",
+-	"gearboy": "Nintendo - Game Boy / Color (GearBoy)",
+-	"gearcoleco": "Coleco - ColecoVision (GearColeco)",
+-	"gearsystem": "Sega - MS/GG/SG-1000 (GearSystem)",
+-	"genesis_plus_gx": "Sega - MS/GG/MD/CD (Genesis Plus GX)",
+-	"genesis_plus_gx_wide": "Sega - MS/GG/MD/CD (Genesis Plus GX Wide)",
+-	"gong": "Gong",
+-	"gw": "Handheld Electronic (GW)",
+-	"handy": "Atari - Lynx (Handy)",
+-	"jaxe": "CHIP-8/S-CHIP/XO-CHIP (JAXE)",
+-	"jumpnbump": "Jump 'n Bump",
+-	"lowresnx": "LowResNX",
+-	"lutro": "Lua Engine (Lutro)",
+-	"m2000": "Philips - P2000T (M2000)",
+-	"mame2000": "Arcade - MAME 2000",
+-	"mame2003": "Arcade - MAME 2003",
+-	"mame2003_plus": "Arcade - MAME 2003-Plus",
+-	"mednafen_lynx": "Atari - Lynx (Beetle Lynx)",
+-	"mednafen_ngp": "SNK - Neo Geo Pocket / Color (Beetle Neo Geo Pop)",
+-	"mednafen_pce_fast": "NEC - PC Engine / CD (Beetle PC Engine Fast)",
+-	"mednafen_vb": "Nintendo - Virtual Boy (Beetle VB)",
+-	"mednafen_wswan": "Bandai - WonderSwan/Color (Beetle WonderSwan)",
+-	"mgba": "Nintendo - Game Boy Advance (mGBA)",
+-	"minivmac": "Mac II (MiniVmac)",
+-	"mu": "Palm OS(Mu)",
+-	"mrboom": "Bomberman (Mr.Boom)",
+-	"neocd": "SNK - Neo Geo CD (NeoCD)",
+-	"nestopia": "Nintendo - NES / Famicom (Nestopia)",
+-	"numero": "Texas Instruments TI-83 (Numero)",
+-	"nxengine": "Cave Story (NX Engine)",
+-	"o2em": "Magnavox - Odyssey2 / Philips Videopac+ (O2EM)",
+-	"opera": "The 3DO Company - 3DO (Opera)",
+-	"pcsx_rearmed": "Sony - PlayStation (PCSX ReARMed)",
+-	"picodrive": "Sega - MS/GG/MD/CD/32X (PicoDrive)",
+-	"pocketcdg": "PocketCDG",
+-	"prboom": "Doom (PrBoom)",
+-	"quasi88": "NEC - PC-8000 / PC-8800 series (QUASI88)",
+-	"quicknes": "Nintendo - NES / Famicom (QuickNES)",
+-	"retro8": "PICO-8 (Retro8)",
+-	"scummvm": "ScummVM",
+-	"snes9x2002": "Nintendo - SNES / SFC (Snes9x 2002)",
+-	"snes9x2005": "Nintendo - SNES / SFC (Snes9x 2005)",
+-	"snes9x2010": "Nintendo - SNES / SFC (Snes9x 2010)",
+-	"snes9x": "Nintendo - SNES / SFC (Snes9x)",
+-	"squirreljme": "Java ME (SquirrelJME)",
+-	"tamalibretro": "Bandai - Tamagothci P1 (TamaLIBretro)",
+-	"tgbdual": "Nintendo - Game Boy / Color (TGB Dual)",
+-	"theodore": "Theodore (Thomson TO8/TO9)",
+-	"tic80": "TIC-80",
+-	"tyrquake": "Quake (TyrQuake)",
+-	"uw8": "MicroW8 (UW8)",
+-	"uzem": "Uzebox (Uzem)",
+-	"vaporspec": "Vaporspec",
+-	"vba_next": "Nintendo - Game Boy Advance (VBA Next)",
+-	"vecx": "GCE - Vectrex (Vecx)",
+-	"vice_x64": "Commodore - C64 (VICE x64, fast)",
+-	"vice_x64sc": "Commodore - C64 (VICE x64sc, accurate)",
+-	"vice_x128": "Commodore - C128 (VICE x128)",
+-	"vice_xcbm2": "Commodore - CBM-II 6x0/7x0 (VICE xcbm2)",
+-	"vice_xcbm5x0": "Commodore - CBM-II 5x0 (xcbm5x0)",
+-	"vice_xpet": "Commodore - PET (VICE xpet)",
+-	"vice_xplus4": "Commodore - PLUS/4 (VICE xplus4)",
+-	"vice_xscpu64": "Commodore - C64 SuperCPU (VICE xscpu4)",
+-	"vice_xvic": "Commodore - VIC-20 (VICE xvic)",
+-	"virtualxt": "VirtualXT",
+-	"vitaquake2": "Quake II (vitaQuake 2)",
+-	"vitaquake2-rogue": "Quake II - Ground Zero (vitaQuake2 (rogue))",
+-	"vitaquake2-xatrix": "Quake II - The Reckoning (vitaQuake2 (xatrix))",
+-	"vitaquake2-zaero": "Quake II - Zaero (vitaQuake2 (zaero))",
+-	"wasm4": "WASM4",
+-	"x1": "Sharp X1 (X Millenium)",
+-	"xrick": "Rick Dangerous (XRick)"
++	"mkxp-z": "RPG Maker XP/VX/VX Ace (mkxp-z)",
+ };
 --- a/pkg/emscripten/libretro-thread/index.html
 +++ b/pkg/emscripten/libretro-thread/index.html
 @@ -13,6 +13,11 @@
@@ -12,113 +107,26 @@
  		<!--Navbar-->
  		<div id="navbar">
  			<input type="checkbox" id="menuhider">
-@@ -27,95 +32,7 @@
- 						<span class="fa fa-caret-down"></span>
- 					</label>
- 					<div class="dropdown-child ozone-list" id="core-selector">
--						<a href="." data-core="2048">2048</a>
--						<a href="." data-core="anarch">Anarch</a>
--						<a href="." data-core="ardens">Arduboy (Ardens)</a>
--						<a href="." data-core="arduous">Arduboy (Arduous)</a>
--						<a href="." data-core="bk">Elektronika - BK-0010/BK-0011 (BK)</a>
--						<a href="." data-core="chailove">ChaiLove</a>
--						<a href="." data-core="craft">Minecraft (Craft)</a>
--						<a href="." data-core="DoubleCherryGB">Nintendo - Game Boy / Color (DoubleCherryGB)</a>
--						<a href="." data-core="ecwolf">Wolfenstein 3D (ECWolf)</a>
--						<a href="." data-core="fbalpha2012">Arcade (FB Alpha 2012)</a>
--						<a href="." data-core="fbalpha2012_cps1">Arcade (FB Alpha 2012 CPS1)</a>
--						<a href="." data-core="fbalpha2012_cps2">Arcade (FB Alpha 2012 CPS2)</a>
--						<a href="." data-core="fbalpha2012_neogeo">Arcade (FB Alpha 2012 NeoGeo)</a>
--						<a href="." data-core="fceumm">Nintendo - NES / Famicom (FCEUmm)</a>
--						<a href="." data-core="freechaf">Fairchild ChannelF (FreeChaF)</a>
--						<a href="." data-core="galaksija">Galaksija</a>
--						<a href="." data-core="gambatte">Nintendo - Game Boy / Color (Gambatte)</a>
--						<a href="." data-core="gme">Game Music Emu</a>
--						<a href="." data-core="gearboy">Nintendo - Game Boy / Color (GearBoy)</a>
--						<a href="." data-core="gearcoleco">Coleco - ColecoVision (GearColeco)</a>
--						<a href="." data-core="gearsystem">Sega - MS/GG/SG-1000 (GearSystem)</a>
--						<a href="." data-core="genesis_plus_gx">Sega - MS/GG/MD/CD (Genesis Plus GX)</a>
--						<a href="." data-core="genesis_plus_gx_wide">Sega - MS/GG/MD/CD (Genesis Plus GX Wide)</a>
--						<a href="." data-core="gong">Gong</a>
--						<a href="." data-core="gw">Handheld Electronic (GW)</a>
--						<a href="." data-core="handy">Atari - Lynx (Handy)</a>
--						<a href="." data-core="jaxe">CHIP-8/S-CHIP/XO-CHIP (JAXE)</a>
--						<a href="." data-core="jumpnbump">Jump 'n Bump</a>
--						<a href="." data-core="lowresnx">LowResNX</a>
--						<a href="." data-core="lutro">Lua Engine (Lutro)</a>
--						<a href="." data-core="m2000">Philips - P2000T (M2000)</a>
--						<a href="." data-core="mame2000">Arcade - MAME 2000</a>
--						<a href="." data-core="mame2003">Arcade - MAME 2003</a>
--						<a href="." data-core="mame2003_plus">Arcade - MAME 2003-Plus</a>
--						<a href="." data-core="mednafen_lynx">Atari - Lynx (Beetle Lynx)</a>
--						<a href="." data-core="mednafen_ngp">SNK - Neo Geo Pocket / Color (Beetle Neo Geo Pop)</a>
--						<a href="." data-core="mednafen_pce_fast">NEC - PC Engine / CD (Beetle PC Engine Fast)</a>
--						<a href="." data-core="mednafen_vb">Nintendo - Virtual Boy (Beetle VB)</a>
--						<a href="." data-core="mednafen_wswan">Bandai - WonderSwan/Color (Beetle WonderSwan)</a>
--						<a href="." data-core="mgba">Nintendo - Game Boy Advance (mGBA)</a>
--						<a href="." data-core="minivmac">Mac II (MiniVmac)</a>
--						<a href="." data-core="mu">Palm OS(Mu)</a>
--						<a href="." data-core="mrboom">Bomberman (Mr.Boom)</a>
--						<a href="." data-core="neocd">SNK - Neo Geo CD (NeoCD)</a>
--						<a href="." data-core="nestopia">Nintendo - NES / Famicom (Nestopia)</a>
--						<a href="." data-core="numero">Texas Instruments TI-83 (Numero)</a>
--						<a href="." data-core="nxengine">Cave Story (NX Engine)</a>
--						<a href="." data-core="o2em">Magnavox - Odyssey2 / Philips Videopac+ (O2EM)</a>
--						<a href="." data-core="opera">The 3DO Company - 3DO (Opera)</a>
--						<a href="." data-core="pcsx_rearmed">Sony - PlayStation (PCSX ReARMed)</a>
--						<a href="." data-core="picodrive">Sega - MS/GG/MD/CD/32X (PicoDrive)</a>
--						<a href="." data-core="pocketcdg">PocketCDG</a>
--						<a href="." data-core="prboom">Doom (PrBoom)</a>
--						<a href="." data-core="quasi88">NEC - PC-8000 / PC-8800 series (QUASI88)</a>
--						<a href="." data-core="quicknes">Nintendo - NES / Famicom (QuickNES)</a>
--						<a href="." data-core="retro8">PICO-8 (Retro8)</a>
--						<a href="." data-core="scummvm">ScummVM</a>
--						<a href="." data-core="snes9x2002">Nintendo - SNES / SFC (Snes9x 2002)</a>
--						<a href="." data-core="snes9x2005">Nintendo - SNES / SFC (Snes9x 2005)</a>
--						<a href="." data-core="snes9x2010">Nintendo - SNES / SFC (Snes9x 2010)</a>
--						<a href="." data-core="snes9x">Nintendo - SNES / SFC (Snes9x)</a>
--						<a href="." data-core="squirreljme">Java ME (SquirrelJME)</a>
--						<a href="." data-core="tamalibretro">Bandai - Tamagothci P1 (TamaLIBretro)</a>
--						<a href="." data-core="tgbdual">Nintendo - Game Boy / Color (TGB Dual)</a>
--						<a href="." data-core="theodore">Theodore (Thomson TO8/TO9)</a>
--						<a href="." data-core="tic80">TIC-80</a>
--						<a href="." data-core="tyrquake">Quake (TyrQuake)</a>
--						<a href="." data-core="uw8">MicroW8 (UW8)</a>
--						<a href="." data-core="uzem">Uzebox (Uzem)</a>
--						<a href="." data-core="vaporspec">Vaporspec</a>
--						<a href="." data-core="vba_next">Nintendo - Game Boy Advance (VBA Next)</a>
--						<a href="." data-core="vecx">GCE - Vectrex (Vecx)</a>
--						<a href="." data-core="vice_x64">Commodore - C64 (VICE x64, fast)</a>
--						<a href="." data-core="vice_x64sc">Commodore - C64 (VICE x64sc, accurate)</a>
--						<a href="." data-core="vice_x128">Commodore - C128 (VICE x128)</a>
--						<a href="." data-core="vice_xcbm2">Commodore - CBM-II 6x0/7x0 (VICE xcbm2)</a>
--						<a href="." data-core="vice_xcbm5x0">Commodore - CBM-II 5x0 (xcbm5x0)</a>
--						<a href="." data-core="vice_xpet">Commodore - PET (VICE xpet)</a>
--						<a href="." data-core="vice_xplus4">Commodore - PLUS/4 (VICE xplus4)</a>
--						<a href="." data-core="vice_xscpu64">Commodore - C64 SuperCPU (VICE xscpu4)</a>
--						<a href="." data-core="vice_xvic">Commodore - VIC-20 (VICE xvic)</a>
--						<a href="." data-core="virtualxt">VirtualXT</a>
--						<a href="." data-core="vitaquake2">Quake II (vitaQuake 2)</a>
--						<a href="." data-core="vitaquake2-rogue">Quake II - Ground Zero (vitaQuake2 (rogue))</a>
--						<a href="." data-core="vitaquake2-xatrix">Quake II - The Reckoning (vitaQuake2 (xatrix))</a>
--						<a href="." data-core="vitaquake2-zaero">Quake II - Zaero (vitaQuake2 (zaero))</a>
--						<a href="." data-core="wasm4">WASM4</a>
--						<a href="." data-core="x1">Sharp X1 (X Millenium)</a>
--						<a href="." data-core="xrick">Rick Dangerous (XRick)</a>
-+						<a href="." data-core="mkxp-z">RPG Maker XP/VX/VX Ace (mkxp-z)</a>
- 					</div>
- 				</li>
- 				<li id="btnRun" class="disabled">
 --- a/pkg/emscripten/libretro-thread/libretro.js
 +++ b/pkg/emscripten/libretro-thread/libretro.js
-@@ -426,6 +426,6 @@ document.addEventListener("DOMContentLoaded", async function() {
- 	});
+@@ -4,7 +4,7 @@
+  * This provides the basic JavaScript for the RetroArch web player.
+  */
  
- 	// Find which core to load.
--	const core = localStorage.getItem("core") || "gambatte";
-+	const core = localStorage.getItem("core") || "mkxp-z";
- 	loadCore(core);
- });
+-const defaultCore = "gambatte";
++const defaultCore = "mkxp-z";
+ var autoStart = true;
+ 
+ let currentCore;
+@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", async function() {
+ 		icnAdd.classList.remove("fa-spinner", "fa-spin");
+ 		icnAdd.classList.add("fa-plus");
+ 	});
+-	
++
+ 	fileManagerPanel.addEventListener("click", function(e) {
+ 		fileManagerEvent(e.target);
+ 	});
 --- a/pkg/emscripten/libretro-thread/libretro.worker.js
 +++ b/pkg/emscripten/libretro-thread/libretro.worker.js
 @@ -6,12 +6,12 @@ const helper = {};
