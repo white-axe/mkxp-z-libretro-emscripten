@@ -118,15 +118,6 @@
  var autoStart = true;
  
  let currentCore;
-@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", async function() {
- 		icnAdd.classList.remove("fa-spinner", "fa-spin");
- 		icnAdd.classList.add("fa-plus");
- 	});
--	
-+
- 	fileManagerPanel.addEventListener("click", function(e) {
- 		fileManagerEvent(e.target);
- 	});
 --- a/pkg/emscripten/libretro-thread/libretro.worker.js
 +++ b/pkg/emscripten/libretro-thread/libretro.worker.js
 @@ -6,12 +6,12 @@ const helper = {};
