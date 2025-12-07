@@ -6,6 +6,10 @@
 	path = retroarch
 	url = https://github.com/libretro/RetroArch
 	branch = master
+[submodule "libretro-super"]
+	path = libretro-super
+	url = https://github.com/libretro/libretro-super
+	branch = master
 [submodule "retroarch-assets"]
 	path = retroarch-assets
 	url = https://github.com/libretro/retroarch-assets
