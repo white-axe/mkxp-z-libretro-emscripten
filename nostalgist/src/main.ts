@@ -11,7 +11,7 @@ import { Nostalgist } from 'nostalgist';
 // otherwise the audio will not work because audio is gated behind sticky activation
 // (see https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/User_activation)
 while (!navigator.userActivation.hasBeenActive) {
-  let prompt = document.getElementById('user-activation-prompt');
+  const prompt = document.getElementById('user-activation-prompt');
   if (prompt !== null) {
     prompt.style['display'] = 'initial';
   }
