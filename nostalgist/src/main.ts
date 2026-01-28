@@ -8,36 +8,6 @@ const STATE_DIRECTORY = '/' + CORE_NAME + '/states';
 import { Nostalgist } from 'nostalgist';
 import { Spinner } from 'spin.js';
 
-// Force the user to interact with the browser once before starting the game;
-// otherwise the audio will not work because audio is gated behind sticky activation
-// (see https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/User_activation)
-while (!navigator.userActivation.hasBeenActive) {
-  const prompt = document.getElementById('user-activation-prompt');
-  if (prompt !== null) {
-    prompt.style.display = 'initial';
-  }
-  await new Promise<void>((resolve, reject) => {
-    const events = ['keydown', 'mousedown', 'pointerdown', 'pointerup', 'touchend'];
-    const listener = () => {
-      try {
-        for (const ev of events) {
-          document.body.removeEventListener(ev, listener);
-        }
-      } catch (err) {
-        reject(err);
-        return;
-      }
-      resolve();
-    };
-    for (const ev of events) {
-      document.body.addEventListener(ev, listener);
-    }
-  });
-  if (prompt !== null) {
-    prompt.style.display = 'none';
-  }
-}
-
 let spinner: Spinner | null = null;
 const spinner_target = document.getElementById('spinner-target');
 if (spinner_target !== null) {
@@ -95,5 +65,35 @@ await new Promise<void>((resolve, reject) => {
 });
 
 spinner?.stop();
+
+// Force the user to interact with the browser once before starting the game;
+// otherwise the audio will not work because audio is gated behind sticky activation
+// (see https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/User_activation)
+while (!navigator.userActivation.hasBeenActive) {
+  const prompt = document.getElementById('user-activation-prompt');
+  if (prompt !== null) {
+    prompt.style.display = 'initial';
+  }
+  await new Promise<void>((resolve, reject) => {
+    const events = ['keydown', 'mousedown', 'pointerdown', 'pointerup', 'touchend'];
+    const listener = () => {
+      try {
+        for (const ev of events) {
+          document.body.removeEventListener(ev, listener);
+        }
+      } catch (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    };
+    for (const ev of events) {
+      document.body.addEventListener(ev, listener);
+    }
+  });
+  if (prompt !== null) {
+    prompt.style.display = 'none';
+  }
+}
 
 await nostalgist.start();
