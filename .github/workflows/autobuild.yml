@@ -15,18 +15,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build
+  build-stage1:
+    name: Build stage 1
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git curl build-essential automake libtool zip universal-ctags ruby
-          sudo apt install -y meson cmake
+          sudo apt install -y curl build-essential automake libtool zip universal-ctags ruby
 
       - name: Set up WASI SDK
         run: |
@@ -42,6 +38,32 @@ jobs:
           tar -xzf ${{ runner.temp }}/binaryen.tar.gz -C ${{ runner.temp }}/binaryen --strip-components=1
           rm ${{ runner.temp }}/binaryen.tar.gz
 
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Build stage 1
+        run: |
+          cd mkxp-z/libretro
+          CLICOLOR_FORCE=1 make -j $(nproc) WASI_SDK=${{ runner.temp }}/wasi-sdk WASM_OPT=${{ runner.temp }}/binaryen/bin/wasm-opt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: stage1
+          path: mkxp-z/libretro/build/libretro-stage1
+
+  build-core:
+    needs: build-stage1
+    name: Build core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y meson cmake
+
       - name: Set up Emscripten SDK
         uses: mymindstorm/setup-emsdk@v14
         with:
@@ -52,13 +74,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up Pages
-        uses: actions/configure-pages@v5
-
-      - name: Build stage 1
-        run: |
-          cd mkxp-z/libretro
-          CLICOLOR_FORCE=1 make -j $(nproc) WASI_SDK=${{ runner.temp }}/wasi-sdk WASM_OPT=${{ runner.temp }}/binaryen/bin/wasm-opt
+      - name: Download stage 1
+        uses: actions/download-artifact@v5
+        with:
+          name: stage1
+          path: mkxp-z/libretro/build/libretro-stage1
 
       - name: Configure core
         run: |
@@ -82,8 +102,205 @@ jobs:
           cd mkxp-z/build
           CLICOLOR_FORCE=1 ninja -v
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro.a
+          path: mkxp-z/build/mkxp-z_libretro.a
+
+  build-frontend-idbfs:
+    needs: build-core
+    name: Build frontend with IDBFS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.8
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Download core
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro.a
+          path: mkxp-z/build
+
       - name: Build frontend
         run: |
+          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
+          cd retroarch
+          git apply ../retroarch.patch
+          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=0 HAVE_EXTRA_WASMFS=0
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro_idbfs
+          path: |
+            retroarch/mkxp-z_libretro.js
+            retroarch/mkxp-z_libretro.wasm
+
+  build-frontend-wasmfs:
+    needs: build-core
+    name: Build frontend with WasmFS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.8
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Download core
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro.a
+          path: mkxp-z/build
+
+      - name: Build frontend
+        run: |
+          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
+          cd retroarch
+          git apply ../retroarch.patch
+          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro_wasmfs
+          path: |
+            retroarch/mkxp-z_libretro.js
+            retroarch/mkxp-z_libretro.wasm
+
+  download-crysalis:
+    name: Download Crysalis
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl 7zip innoextract zip
+
+      - name: Restore game from cache
+        id: cache-game
+        uses: actions/cache@v5
+        with:
+          key: crysalis.zip
+          path: crysalis.zip
+
+      - name: Download game if not cached
+        if: steps.cache-game.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko crysalis.zip https://dl.komodo.jp/rpgmakerweb/sample-games/crysalis.zip
+          [ "$(sha256sum crysalis.zip | cut -d ' ' -f 1)" = '8388d84097e8427abf22fcd110abd98d5892991987259d5bfc0b75eabea74763' ]
+
+      - name: Restore run time package from cache
+        id: cache-rtp
+        uses: actions/cache@v5
+        with:
+          key: RPGVXAce_RTP.zip
+          path: RPGVXAce_RTP.zip
+
+      - name: Download run time package if not cached
+        if: steps.cache-rtp.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko RPGVXAce_RTP.zip https://dl.komodo.jp/rpgmakerweb/run-time-packages/RPGVXAce_RTP.zip
+          [ "$(sha256sum RPGVXAce_RTP.zip | cut -d ' ' -f 1)" = '7e93d0ead93a686218b7c671bf099ef42f09f536083bd0b2f0fa6423a39fc19b' ]
+
+      - name: Pack game files
+        run: |
+          unzip crysalis.zip
+          7z x -ocrysalis Crysalis.exe
+          unzip RPGVXAce_RTP.zip
+          innoextract RTP100/Setup.exe
+          cp -r crysalis/* app/
+          cd app
+          zip -r0 ../crysalis.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crysalis.mkxpz
+          path: crysalis.mkxpz
+
+  download-knight-blade-howling-of-kerberos:
+    name: 'Download KNight-Blade: Howling of Kerberos'
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl innoextract zip
+
+      - name: Restore game from cache
+        id: cache-game
+        uses: actions/cache@v5
+        with:
+          key: knight-blade-howling-of-kerberos.zip
+          path: knight-blade-howling-of-kerberos.zip
+
+      - name: Download game if not cached
+        if: steps.cache-game.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko knight-blade-howling-of-kerberos.zip https://dl.komodo.jp/rpgmakerweb/sample-games/knight-blade-howling-of-kerberos.zip
+          [ "$(sha256sum knight-blade-howling-of-kerberos.zip | cut -d ' ' -f 1)" = 'a47c9cf1eaa466fc0fcd5e4fff0143881d318a71424fe1fab823aa95acaac58c' ]
+
+      - name: Restore run time package from cache
+        id: cache-rtp
+        uses: actions/cache@v5
+        with:
+          key: xp_rtp104e.exe
+          path: xp_rtp104e.exe
+
+      - name: Download run time package if not cached
+        if: steps.cache-rtp.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko xp_rtp104e.exe https://dl.komodo.jp/rpgmakerweb/run-time-packages/xp_rtp104e.exe
+          [ "$(sha256sum xp_rtp104e.exe | cut -d ' ' -f 1)" = 'b3bd20ad7f413b40ac233aafd2e061de1dc429c2eadb59d0b3157ba3c47f16b2' ]
+
+      - name: Pack game files
+        run: |
+          unzip knight-blade-howling-of-kerberos.zip
+          innoextract xp_rtp104e.exe
+          cp -r KN_E/* app/
+          cd app
+          zip -r0 ../knight-blade-howling-of-kerberos.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: knight-blade-howling-of-kerberos.mkxpz
+          path: knight-blade-howling-of-kerberos.mkxpz
+
+  build-retroarch-web-player:
+    needs: build-frontend-wasmfs
+    name: Build RetroArch web player
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Download core + frontend
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_wasmfs
+          path: retroarch
+
+      - name: Build RetroArch web player
+        run: |
+          mv retroarch/mkxp-z_libretro.js retroarch/pkg/emscripten/libretro-thread/
+          mv retroarch/mkxp-z_libretro.wasm retroarch/pkg/emscripten/libretro-thread/
+
           mkdir bundle
           mkdir bundle/assets
           mkdir bundle/assets/xmb
@@ -101,17 +318,115 @@ jobs:
           mv retroarch/media retroarch/pkg/emscripten/libretro-thread
           mv coi-serviceworker/coi-serviceworker.js retroarch/pkg/emscripten/libretro-thread
 
-          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
           cd retroarch
           git apply ../retroarch.patch
-          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
-          mv mkxp-z_libretro.wasm pkg/emscripten/libretro-thread/mkxp-z_libretro.wasm
-          mv mkxp-z_libretro.js pkg/emscripten/libretro-thread/mkxp-z_libretro.js
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro_retroarch_web_player
+          path: retroarch/pkg/emscripten/libretro-thread
+
+  build-nostalgist:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: crysalis
+            name: Crysalis
+            xp: false
+          - id: knight-blade-howling-of-kerberos
+            name: 'KNight-Blade: Howling of Kerberos'
+            xp: true
+    needs:
+      - build-frontend-idbfs
+      - download-crysalis
+      - download-knight-blade-howling-of-kerberos
+    name: Build Nostalgist.js with ${{ matrix.name }}
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Download core + frontend
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_idbfs
+          path: retroarch
+
+      - name: Download game
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ matrix.id }}.mkxpz
+
+      - name: Build Nostalgist.js
+        run: |
+          mv ${{ matrix.id }}.mkxpz nostalgist/public/
+          echo 'VITE_GAME_PATH=./${{ matrix.id }}.mkxpz' >> nostalgist/.env
+          echo 'VITE_XP_CONTROLS=${{ matrix.xp }}' >> nostalgist/.env
+
+          mv retroarch/mkxp-z_libretro.js nostalgist/public/
+          mv retroarch/mkxp-z_libretro.wasm nostalgist/public/
+          sed -i '1s/^/if (typeof location === "object") import.meta.url = location.href;/' nostalgist/public/mkxp-z_libretro.js # Fixes a bug that prevents Nostalgist.js from loading threaded cores
+
+          mv coi-serviceworker/coi-serviceworker.js nostalgist/public/
+
+          cd nostalgist
+          npm install
+          npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro_nostalgist_${{ matrix.id }}
+          path: nostalgist/dist
+
+  build-website:
+    needs:
+      - build-retroarch-web-player
+      - build-nostalgist
+    name: Build website
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y pandoc
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Generate index.html
+        run: |
+          mkdir dist
+          echo '<!doctype html><html><head><meta charset="UTF-8" /></head><body>' > dist/index.html
+          pandoc -f markdown -t html README.md >> dist/index.html
+          echo '</body></html>' >> dist/index.html
+
+      - name: Download RetroArch web player
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_retroarch_web_player
+          path: dist/retroarch-web-player
+
+      - name: Download Nostalgist.js with Crysalis
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_nostalgist_crysalis
+          path: dist/nostalgist-crysalis
+
+      - name: 'Download Nostalgist.js with KNight-Blade: Howling of Kerberos'
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_nostalgist_knight-blade-howling-of-kerberos
+          path: dist/nostalgist-knight-blade-howling-of-kerberos
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: retroarch/pkg/emscripten/libretro-thread
+          path: dist
           retention-days: 90
 
       - name: Deploy to GitHub Pages
