@@ -5,6 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mkxp-z-nostalgist</title>
+    <link rel="stylesheet" href="/node_modules/spin.js/spin.css" />
   </head>
   <body style="height: 100%; overflow: hidden;">
     <script src="/coi-serviceworker.js"></script>
@@ -12,7 +13,7 @@
       // Send a dummy message every 5 seconds to prevent coi-serviceworker.js from being killed by Firefox for taking too long to fetch large files
       setInterval(function () { navigator.serviceWorker.controller.postMessage({ type: "heartbeat" }); }, 5000);
     </script>
-    <div style="position: fixed; left: 0; top: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+    <div id="spinner-target" style="position: fixed; left: 0; top: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
       <h1 id="user-activation-prompt" style="display: none;">Click here or press any key to start the game</h1>
     </div>
     <canvas id="nostalgist-canvas" style="position: fixed; left: 0; top: 0; width: 100%; height: 100%;"></canvas>

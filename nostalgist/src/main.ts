@@ -6,6 +6,7 @@ const SAVE_DIRECTORY = '/' + CORE_NAME + '/saves';
 const STATE_DIRECTORY = '/' + CORE_NAME + '/states';
 
 import { Nostalgist } from 'nostalgist';
+import { Spinner } from 'spin.js';
 
 // Force the user to interact with the browser once before starting the game;
 // otherwise the audio will not work because audio is gated behind sticky activation
@@ -13,7 +14,7 @@ import { Nostalgist } from 'nostalgist';
 while (!navigator.userActivation.hasBeenActive) {
   const prompt = document.getElementById('user-activation-prompt');
   if (prompt !== null) {
-    prompt.style['display'] = 'initial';
+    prompt.style.display = 'initial';
   }
   await new Promise<void>((resolve, reject) => {
     const events = ['keydown', 'mousedown', 'pointerdown', 'pointerup', 'touchend'];
@@ -33,8 +34,14 @@ while (!navigator.userActivation.hasBeenActive) {
     }
   });
   if (prompt !== null) {
-    prompt.style['display'] = 'none';
+    prompt.style.display = 'none';
   }
+}
+
+let spinner: Spinner | null = null;
+const spinner_target = document.getElementById('spinner-target');
+if (spinner_target !== null) {
+  spinner = new Spinner().spin(spinner_target);
 }
 
 const nostalgist = await Nostalgist.prepare({
@@ -86,5 +93,7 @@ await new Promise<void>((resolve, reject) => {
     }
   });
 });
+
+spinner?.stop();
 
 await nostalgist.start();
