@@ -78,6 +78,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: stage1
+          path: mkxp-z/libretro/build/libretro-stage1
 
       - name: Configure core
         run: |
@@ -126,6 +127,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: mkxp-z_libretro.a
+          path: mkxp-z/build
 
       - name: Build frontend
         run: |
@@ -161,6 +163,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: mkxp-z_libretro.a
+          path: mkxp-z/build
 
       - name: Build frontend
         run: |
@@ -291,11 +294,12 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: mkxp-z_libretro_wasmfs
+          path: retroarch
 
       - name: Build RetroArch web player
         run: |
-          mv mkxp-z/build/mkxp-z_libretro.js retroarch/pkg/emscripten/libretro-thread/
-          mv mkxp-z/build/mkxp-z_libretro.wasm retroarch/pkg/emscripten/libretro-thread/
+          mv retroarch/mkxp-z_libretro.js retroarch/pkg/emscripten/libretro-thread/
+          mv retroarch/mkxp-z_libretro.wasm retroarch/pkg/emscripten/libretro-thread/
 
           mkdir bundle
           mkdir bundle/assets
@@ -350,6 +354,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: mkxp-z_libretro_idbfs
+          path: retroarch
 
       - name: Download game
         uses: actions/download-artifact@v5
@@ -362,8 +367,8 @@ jobs:
           echo 'VITE_GAME_PATH=./${{ matrix.id }}.mkxpz' >> nostalgist/.env
           echo 'VITE_XP_CONTROLS=${{ matrix.xp }}' >> nostalgist/.env
 
-          mv mkxp-z/build/mkxp-z_libretro.js nostalgist/public/
-          mv mkxp-z/build/mkxp-z_libretro.wasm nostalgist/public/
+          mv retroarch/mkxp-z_libretro.js nostalgist/public/
+          mv retroarch/mkxp-z_libretro.wasm nostalgist/public/
           sed -i '1s/^/if (typeof location === "object") import.meta.url = location.href;/' nostalgist/public/mkxp-z_libretro.js # Fixes a bug that prevents Nostalgist.js from loading threaded cores
 
           mv coi-serviceworker/coi-serviceworker.js nostalgist/public/
