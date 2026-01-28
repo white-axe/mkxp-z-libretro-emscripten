@@ -423,6 +423,9 @@ jobs:
           name: mkxp-z_libretro_nostalgist_knight-blade-howling-of-kerberos
           path: dist/nostalgist-knight-blade-howling-of-kerberos
 
+      - name: Set up GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
