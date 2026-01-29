@@ -4,7 +4,7 @@
  
  ifeq ($(HAVE_WASMFS), 1)
     LIBS += -s WASMFS -s FORCE_FILESYSTEM=1
-+else ifeq ($(PROXY_TO_PTHREAD), 1)
++else
 +   LIBS += -lidbfs.js
  endif
  
