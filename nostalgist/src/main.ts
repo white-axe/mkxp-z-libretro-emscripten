@@ -9,10 +9,94 @@ import { Nostalgist } from 'nostalgist';
 import { Spinner } from 'spin.js';
 
 let spinner: Spinner | null = null;
-const spinner_target = document.getElementById('spinner-target');
-if (spinner_target !== null) {
-  spinner = new Spinner().spin(spinner_target);
+const spinnerTarget = document.getElementById('spinner-target');
+if (spinnerTarget !== null) {
+  spinner = new Spinner().spin(spinnerTarget);
 }
+
+// Fetches a file and caches it in IndexedDB to improve subsequent load times.
+const fetchWithCache = (path: string) => async () => {
+  path = new URL(path, location.href).toString();
+
+  let blob: Blob | undefined = undefined;
+
+  const getGameStore = () => {
+    const openRequest = indexedDB.open(CORE_NAME, 1);
+    openRequest.onupgradeneeded = () => {
+      const db = openRequest.result;
+      db.createObjectStore('cache', {keyPath: 'path'});
+    };
+    return openRequest;
+  };
+
+  try {
+    blob = await new Promise((resolve, reject) => {
+      try {
+        const openRequest = getGameStore();
+        openRequest.onsuccess = () => {
+          try {
+            const db = openRequest.result;
+            const tx = db.transaction('cache', 'readonly');
+            const store = tx.objectStore('cache');
+            const getRequest = store.get(path);
+            getRequest.onsuccess = () => {
+              resolve(getRequest.result?.blob);
+            };
+            getRequest.onerror = () => {
+              reject(getRequest.error);
+            };
+          } catch (err) {
+            reject(err);
+          }
+        };
+        openRequest.onerror = () => {
+          reject(openRequest.error);
+        };
+      } catch (err) {
+        reject(err);
+      }
+    });
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (blob === undefined) {
+    blob = await (await fetch(path)).blob();
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        try {
+          const openRequest = getGameStore();
+          openRequest.onsuccess = () => {
+            try {
+              const db = openRequest.result;
+              const tx = db.transaction('cache', 'readwrite');
+              const store = tx.objectStore('cache');
+              const putRequest = store.put({path, blob});
+              putRequest.onsuccess = () => {
+                resolve();
+              };
+              putRequest.onerror = () => {
+                reject(putRequest.error);
+              };
+            } catch (err) {
+              reject(err);
+            }
+          };
+          openRequest.onerror = () => {
+            reject(openRequest.error);
+          };
+        } catch (err) {
+          reject(err);
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  return blob;
+};
 
 const nostalgist = await Nostalgist.prepare({
   core: {
@@ -20,7 +104,7 @@ const nostalgist = await Nostalgist.prepare({
     js: './' + CORE_NAME + '_libretro.js',
     wasm: './' + CORE_NAME + '_libretro.wasm',
   },
-  rom: GAME_PATH,
+  rom: fetchWithCache(GAME_PATH ?? ''),
   element: '#nostalgist-canvas',
   retroarchConfig: {
     savefile_directory: SAVE_DIRECTORY,
