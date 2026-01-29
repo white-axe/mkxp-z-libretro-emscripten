@@ -14,13 +14,13 @@ if (spinnerTarget !== null) {
   spinner = new Spinner().spin(spinnerTarget);
 }
 
-// Fetches a file and caches it in IndexedDB to improve subsequent load times.
+// Fetches a file and caches it in IndexedDB to improve subsequent load times
 const fetchWithCache = (path: string) => async () => {
   path = new URL(path, location.href).toString();
 
   let blob: Blob | undefined = undefined;
 
-  const getGameStore = () => {
+  const getCacheStore = () => {
     const openRequest = indexedDB.open(CORE_NAME, 1);
     openRequest.onupgradeneeded = () => {
       const db = openRequest.result;
@@ -29,50 +29,60 @@ const fetchWithCache = (path: string) => async () => {
     return openRequest;
   };
 
-  try {
-    blob = await new Promise((resolve, reject) => {
-      try {
-        const openRequest = getGameStore();
-        openRequest.onsuccess = () => {
-          try {
-            const db = openRequest.result;
-            const tx = db.transaction('cache', 'readonly');
-            const store = tx.objectStore('cache');
-            const getRequest = store.get(path);
-            getRequest.onsuccess = () => {
-              resolve(getRequest.result?.blob);
-            };
-            getRequest.onerror = () => {
-              reject(getRequest.error);
-            };
-          } catch (err) {
-            reject(err);
-          }
-        };
-        openRequest.onerror = () => {
-          reject(openRequest.error);
-        };
-      } catch (err) {
-        reject(err);
+  const headers = (await fetch(path, {method: 'HEAD'})).headers;
+  const etag = headers.get('ETag');
+  const lastModified = headers.get('Last-Modified');
+
+  if (etag !== null || lastModified !== null) {
+    try {
+      const result = await new Promise<{blob: Blob, etag: string | null, lastModified: string | null} | undefined>((resolve, reject) => {
+        try {
+          const openRequest = getCacheStore();
+          openRequest.onsuccess = () => {
+            try {
+              const db = openRequest.result;
+              const tx = db.transaction('cache', 'readonly');
+              const store = tx.objectStore('cache');
+              const getRequest = store.get(path);
+              getRequest.onsuccess = () => {
+                resolve(getRequest.result);
+              };
+              getRequest.onerror = () => {
+                reject(getRequest.error);
+              };
+            } catch (err) {
+              reject(err);
+            }
+          };
+          openRequest.onerror = () => {
+            reject(openRequest.error);
+          };
+        } catch (err) {
+          reject(err);
+        }
+      });
+      if (result !== undefined && result.etag === etag && result.lastModified == lastModified) {
+        blob = result.blob;
       }
-    });
-  } catch (err) {
-    console.error(err);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   if (blob === undefined) {
-    blob = await (await fetch(path)).blob();
+    const response = await fetch(path);
+    blob = await response.blob();
 
     try {
       await new Promise<void>((resolve, reject) => {
         try {
-          const openRequest = getGameStore();
+          const openRequest = getCacheStore();
           openRequest.onsuccess = () => {
             try {
               const db = openRequest.result;
               const tx = db.transaction('cache', 'readwrite');
               const store = tx.objectStore('cache');
-              const putRequest = store.put({path, blob});
+              const putRequest = store.put({path, blob, etag: response.headers.get('ETag'), lastModified: response.headers.get('Last-Modified')});
               putRequest.onsuccess = () => {
                 resolve();
               };
@@ -102,7 +112,7 @@ const nostalgist = await Nostalgist.prepare({
   core: {
     name: CORE_NAME.replace(/-/g, '_'),
     js: './' + CORE_NAME + '_libretro.js',
-    wasm: './' + CORE_NAME + '_libretro.wasm',
+    wasm: fetchWithCache('./' + CORE_NAME + '_libretro.wasm'),
   },
   rom: fetchWithCache(GAME_PATH ?? ''),
   element: '#nostalgist-canvas',
