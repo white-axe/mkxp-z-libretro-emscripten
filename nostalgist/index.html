@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mkxp-z-nostalgist</title>
     <link rel="stylesheet" href="/node_modules/spin.js/spin.css" />
+    <style>
+      .Gamepad-controller.is-active {
+        box-shadow: 0 0 50px currentColor;
+      }
+    </style>
   </head>
   <body style="height: 100%; overflow: hidden;">
     <script src="/coi-serviceworker.js"></script>
@@ -17,6 +22,7 @@
       <h1 id="user-activation-prompt" style="display: none;">Click here or press any key to start the game</h1>
     </div>
     <canvas id="nostalgist-canvas" style="position: fixed; left: 0; top: 0; width: 100%; height: 100%;"></canvas>
+    <div id="gamepad-target"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
