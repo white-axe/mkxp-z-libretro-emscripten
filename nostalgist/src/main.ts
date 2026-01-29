@@ -14,6 +14,13 @@ if (spinnerTarget !== null) {
   spinner = new Spinner().spin(spinnerTarget);
 }
 
+// Disable bfcache because it causes the WebAssembly module to crash when this page is restored from bfcache
+window.addEventListener('pageshow', (ev) => {
+  if (ev.persisted) {
+    location.reload();
+  }
+});
+
 // Fetches a file and caches it in IndexedDB to improve subsequent load times
 const fetchWithCache = (path: string) => async () => {
   path = new URL(path, location.href).toString();
