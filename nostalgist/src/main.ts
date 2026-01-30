@@ -198,6 +198,7 @@ const nostalgist = await Nostalgist.prepare({
     savestate_directory: STATE_DIRECTORY,
     input_toggle_fast_forward: 'space',
     input_hold_fast_forward: 'l',
+    input_toggle_slowmotion: 'g',
     input_hold_slowmotion: 'e',
     input_menu_toggle: 'f1',
     input_save_state: 'f2',
@@ -476,6 +477,58 @@ if (primaryInput === 'touch' && gamepadTarget !== null) {
       },
       onInput: (state) => {
         nostalgist.getCanvas().dispatchEvent(new KeyboardEvent(state.isActive ? 'keydown' : 'keyup', {code: getCode('input_player1_up')}));
+      },
+    }),
+    new Button({
+      id: 'gamepad-save-state',
+      text: '\u00a0SAVE\u00a0STATE\u00a0',
+      parentElement: gamepadTarget,
+      radius: 20,
+      position: {
+        top: '25px',
+        left: '63px',
+      },
+      onInput: (state) => {
+        nostalgist.getCanvas().dispatchEvent(new KeyboardEvent(state.isActive ? 'keydown' : 'keyup', {code: getCode('input_save_state')}));
+      },
+    }),
+    new Button({
+      id: 'gamepad-load-state',
+      text: '\u00a0LOAD\u00a0STATE\u00a0',
+      parentElement: gamepadTarget,
+      radius: 20,
+      position: {
+        top: '75px',
+        left: '63px',
+      },
+      onInput: (state) => {
+        nostalgist.getCanvas().dispatchEvent(new KeyboardEvent(state.isActive ? 'keydown' : 'keyup', {code: getCode('input_load_state')}));
+      },
+    }),
+    new Button({
+      id: 'gamepad-fast-forward',
+      text: '\u00a0FAST\u00a0FORWARD\u00a0',
+      parentElement: gamepadTarget,
+      radius: 20,
+      position: {
+        top: '25px',
+        right: '80px',
+      },
+      onInput: (state) => {
+        nostalgist.getCanvas().dispatchEvent(new KeyboardEvent(state.isActive ? 'keydown' : 'keyup', {code: getCode('input_toggle_fast_forward')}));
+      },
+    }),
+    new Button({
+      id: 'gamepad-slow-motion',
+      text: '\u00a0SLOW\u00a0MOTION\u00a0',
+      parentElement: gamepadTarget,
+      radius: 20,
+      position: {
+        top: '75px',
+        right: '77px',
+      },
+      onInput: (state) => {
+        nostalgist.getCanvas().dispatchEvent(new KeyboardEvent(state.isActive ? 'keydown' : 'keyup', {code: getCode('input_toggle_slowmotion')}));
       },
     }),
   ]);
