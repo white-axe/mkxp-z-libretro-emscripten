@@ -50,7 +50,7 @@ window.addEventListener('pageshow', (ev) => {
 });
 
 // Wait for coi-serviceworker.js to load
-if (navigator.serviceWorker.controller === null) {
+if (!window.crossOriginIsolated && navigator.serviceWorker.controller === null) {
   throw 'coi-serviceworker.js is not ready yet';
 }
 const sessionStorageKey = 'nostalgist status for ' + CORE_NAME + ' @ ' + location.href;
