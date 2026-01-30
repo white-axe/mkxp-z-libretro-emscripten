@@ -1,16 +1,17 @@
-const CORE_NAME = 'mkxp-z';
-const GAME_PATH: string | undefined = import.meta.env.VITE_GAME_PATH;
-const XP_CONTROLS = import.meta.env.VITE_XP_CONTROLS !== undefined && import.meta.env.VITE_XP_CONTROLS !== 'false';
-
-const SAVE_DIRECTORY = '/' + CORE_NAME + '/saves';
-const STATE_DIRECTORY = '/' + CORE_NAME + '/states';
-
 import { Button, Gamepad } from '@rbuljan/gamepad';
 import { primaryInput } from 'detect-it';
 import fetchProgress from 'fetch-progress';
 import { Nostalgist } from 'nostalgist';
 import ProgressBar from 'progressbar.js';
 import { Spinner } from 'spin.js';
+
+const CORE_NAME = 'mkxp-z';
+const GAME_PATH: string | undefined = import.meta.env.VITE_GAME_PATH;
+const XP_CONTROLS = import.meta.env.VITE_XP_CONTROLS !== undefined && import.meta.env.VITE_XP_CONTROLS !== 'false';
+
+// These can be arbitrary
+const SAVE_DIRECTORY = '/' + CORE_NAME + '/saves';
+const STATE_DIRECTORY = '/' + CORE_NAME + '/states';
 
 const spinner = new Spinner({
   color: '#fff',
@@ -64,7 +65,7 @@ if (!window.crossOriginIsolated) {
 }
 
 // Fetches a file and caches it in IndexedDB to improve subsequent load times
-const fetchWithCache = async (path: string) => {
+const fetchWithCache = async (path: string, size: number) => {
   path = new URL(path, location.href).toString();
 
   let blob: Blob | undefined = undefined;
@@ -110,7 +111,7 @@ const fetchWithCache = async (path: string) => {
           reject(err);
         }
       });
-      if (result !== undefined && result.etag === etag && result.lastModified == lastModified) {
+      if (result !== undefined && result.blob.size === size && result.etag === etag && result.lastModified == lastModified) {
         blob = result.blob;
       }
     } catch (err) {
@@ -124,7 +125,7 @@ const fetchWithCache = async (path: string) => {
       .then(fetchProgress({
         onProgress: (progress) => {
           if (fetchedBytes === 0 && progress.transferred !== 0) {
-            totalBytes += progress.total;
+            totalBytes += size;
           }
           currentBytes += progress.transferred - fetchedBytes;
           fetchedBytes = progress.transferred;
@@ -173,9 +174,9 @@ const nostalgist = await Nostalgist.prepare({
   core: {
     name: CORE_NAME.replace(/-/g, '_'),
     js: './' + CORE_NAME + '_libretro.js',
-    wasm: fetchWithCache('./' + CORE_NAME + '_libretro.wasm'),
+    wasm: fetchWithCache('./' + CORE_NAME + '_libretro.wasm', parseInt(import.meta.env.VITE_CORE_SIZE)),
   },
-  rom: fetchWithCache(GAME_PATH ?? ''),
+  rom: fetchWithCache(GAME_PATH ?? '', parseInt(import.meta.env.VITE_GAME_SIZE)),
   element: '#nostalgist-canvas',
   retroarchConfig: {
     savefile_directory: SAVE_DIRECTORY,

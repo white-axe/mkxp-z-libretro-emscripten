@@ -364,14 +364,17 @@ jobs:
       - name: Build Nostalgist.js
         run: |
           mv ${{ matrix.id }}.mkxpz nostalgist/public/
-          echo 'VITE_GAME_PATH=./${{ matrix.id }}.mkxpz' >> nostalgist/.env
-          echo 'VITE_XP_CONTROLS=${{ matrix.xp }}' >> nostalgist/.env
 
           mv retroarch/mkxp-z_libretro.js nostalgist/public/
           mv retroarch/mkxp-z_libretro.wasm nostalgist/public/
           sed -i '1s/^/if (typeof location === "object") import.meta.url = location.href;/' nostalgist/public/mkxp-z_libretro.js # Fixes a bug that prevents Nostalgist.js from loading threaded cores
 
           mv coi-serviceworker/coi-serviceworker.js nostalgist/public/
+
+          echo "VITE_CORE_SIZE=$(du -b nostalgist/public/mkxp-z_libretro.wasm | cut -f 1)" >> nostalgist/.env
+          echo "VITE_GAME_SIZE=$(du -b nostalgist/public/${{ matrix.id }}.mkxpz | cut -f 1)" >> nostalgist/.env
+          echo 'VITE_GAME_PATH=./${{ matrix.id }}.mkxpz' >> nostalgist/.env
+          echo 'VITE_XP_CONTROLS=${{ matrix.xp }}' >> nostalgist/.env
 
           cd nostalgist
           npm install
