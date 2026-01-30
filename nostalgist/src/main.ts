@@ -6,6 +6,8 @@ import ProgressBar from 'progressbar.js';
 import { Spinner } from 'spin.js';
 
 const CORE_NAME = 'mkxp-z';
+const CORE_SIZE = parseInt(import.meta.env.VITE_CORE_SIZE);
+const GAME_SIZE = parseInt(import.meta.env.VITE_GAME_SIZE);
 const GAME_PATH: string | undefined = import.meta.env.VITE_GAME_PATH;
 const XP_CONTROLS = import.meta.env.VITE_XP_CONTROLS !== undefined && import.meta.env.VITE_XP_CONTROLS !== 'false';
 
@@ -43,7 +45,7 @@ const updateBar = () => {
   bar.set(isNaN(totalBytes) || !isFinite(totalBytes) || totalBytes === 0 ? 0 : currentBytes / totalBytes);
 };
 
-// Disable bfcache because it causes the WebAssembly module to crash when this page is restored from bfcache
+// Disable bfcache because it may undo the loading of the game (e.g. when the user refreshes the page in Chromium after the game successfully loads)
 window.addEventListener('pageshow', (ev) => {
   if (ev.persisted) {
     location.reload();
@@ -174,9 +176,9 @@ const nostalgist = await Nostalgist.prepare({
   core: {
     name: CORE_NAME.replace(/-/g, '_'),
     js: './' + CORE_NAME + '_libretro.js',
-    wasm: fetchWithCache('./' + CORE_NAME + '_libretro.wasm', parseInt(import.meta.env.VITE_CORE_SIZE)),
+    wasm: fetchWithCache('./' + CORE_NAME + '_libretro.wasm', CORE_SIZE),
   },
-  rom: fetchWithCache(GAME_PATH ?? '', parseInt(import.meta.env.VITE_GAME_SIZE)),
+  rom: fetchWithCache(GAME_PATH ?? '', GAME_SIZE),
   element: '#nostalgist-canvas',
   retroarchConfig: {
     savefile_directory: SAVE_DIRECTORY,
