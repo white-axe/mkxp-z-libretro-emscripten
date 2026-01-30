@@ -40,10 +40,6 @@ let currentBytes = 0;
 let totalBytes = 0;
 
 const updateBar = () => {
-  if (currentBytes !== 0 && progressbarTarget !== null) {
-    spinner.stop();
-    progressbarTarget.style.display = 'initial';
-  }
   bar.set(isNaN(totalBytes) || !isFinite(totalBytes) || totalBytes === 0 ? 0 : currentBytes / totalBytes);
 };
 
@@ -71,6 +67,8 @@ if (!window.crossOriginIsolated) {
 // Fetches a file and caches it in IndexedDB to improve subsequent load times
 const fetchWithCache = async (path: string, size: number) => {
   path = new URL(path, location.href).toString();
+  totalBytes += size;
+  updateBar();
 
   let blob: Blob | undefined = undefined;
 
@@ -123,17 +121,21 @@ const fetchWithCache = async (path: string, size: number) => {
     }
   }
 
-  if (blob === undefined) {
+  if (blob !== undefined) {
+    currentBytes += size;
+    updateBar();
+  } else {
     let fetchedBytes = 0;
     const response = await fetch(path)
       .then(fetchProgress({
         onProgress: (progress) => {
-          if (fetchedBytes === 0 && progress.transferred !== 0) {
-            totalBytes += size;
-          }
           currentBytes += progress.transferred - fetchedBytes;
           fetchedBytes = progress.transferred;
           updateBar();
+          if (progressbarTarget !== null) {
+            spinner.stop();
+            progressbarTarget.style.display = 'initial';
+          }
         },
       }));
 
