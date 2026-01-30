@@ -9,6 +9,7 @@ There are multiple different user interfaces available:
 * [RetroArch web player](https://white-axe.github.io/mkxp-z-libretro-emscripten/retroarch-web-player/). The reference implementation of a user interface for running libretro cores in web browsers. It allows uploading games of your choice to play. See below for instructions on how to upload games.
 * [Nostalgist.js with Crysalis](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-crysalis/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX Ace sample game Crysalis.
 * [Nostalgist.js with KNight-Blade: Howling of Kerberos](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-knight-blade-howling-of-kerberos/). A user interface using Nostalgist.js preconfigured to play the English version of the RPG Maker XP sample game KNight-Blade: Howling of Kerberos.
+* [Nostalgist.js with Star Stealing Prince](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-star-stealing-prince/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX game Star Stealing Prince.
 
 ## How to use the RetroArch web player
 

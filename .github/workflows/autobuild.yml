@@ -187,7 +187,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl 7zip innoextract zip
+          sudo apt install -y curl zip 7zip innoextract
 
       - name: Restore game from cache
         id: cache-game
@@ -238,7 +238,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl innoextract zip
+          sudo apt install -y curl zip innoextract
 
       - name: Restore game from cache
         id: cache-game
@@ -279,6 +279,40 @@ jobs:
         with:
           name: knight-blade-howling-of-kerberos.mkxpz
           path: knight-blade-howling-of-kerberos.mkxpz
+
+  download-star-stealing-prince:
+    name: Download Star Stealing Prince
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl zip
+
+      - name: Restore game from cache
+        id: cache-game
+        uses: actions/cache@v5
+        with:
+          key: star-stealing-prince.zip
+          path: star-stealing-prince.zip
+
+      - name: Download game if not cached
+        if: steps.cache-game.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko star-stealing-prince.zip https://dl.komodo.jp/rpgmakerweb/free-game-bundle/star-stealing-prince.zip
+          [ "$(sha256sum star-stealing-prince.zip | cut -d ' ' -f 1)" = '453e9863d4b88d8b99d78695663849e0e07b8be7a55a2deb40d2b12e3a37c4bc' ]
+
+      - name: Pack game files
+        run: |
+          unzip star-stealing-prince.zip
+          cd StarStealingPrinceFullV.3.2wRTP
+          zip -r0 ../star-stealing-prince.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: star-stealing-prince.mkxpz
+          path: star-stealing-prince.mkxpz
 
   build-retroarch-web-player:
     needs: build-frontend-wasmfs
@@ -338,10 +372,14 @@ jobs:
           - id: knight-blade-howling-of-kerberos
             name: 'KNight-Blade: Howling of Kerberos'
             xp: true
+          - id: star-stealing-prince
+            name: Star Stealing Prince
+            xp: false
     needs:
       - build-frontend-idbfs
       - download-crysalis
       - download-knight-blade-howling-of-kerberos
+      - download-star-stealing-prince
     name: Build Nostalgist.js with ${{ matrix.name }}
     runs-on: ubuntu-slim
     steps:
@@ -425,6 +463,12 @@ jobs:
         with:
           name: mkxp-z_libretro_nostalgist_knight-blade-howling-of-kerberos
           path: dist/nostalgist-knight-blade-howling-of-kerberos
+
+      - name: Download Nostalgist.js with Star Stealing Prince
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_nostalgist_star-stealing-prince
+          path: dist/nostalgist-star-stealing-prince
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
