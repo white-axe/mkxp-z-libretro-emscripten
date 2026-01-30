@@ -1,7 +1,7 @@
 [submodule "mkxp-z"]
 	path = mkxp-z
 	url = https://github.com/white-axe/mkxp-z
-	branch = libretro
+	branch = libretro-syntax-transform
 [submodule "retroarch"]
 	path = retroarch
 	url = https://github.com/libretro/RetroArch
