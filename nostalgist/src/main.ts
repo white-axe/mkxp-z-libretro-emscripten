@@ -5,16 +5,42 @@ const XP_CONTROLS = import.meta.env.VITE_XP_CONTROLS !== undefined && import.met
 const SAVE_DIRECTORY = '/' + CORE_NAME + '/saves';
 const STATE_DIRECTORY = '/' + CORE_NAME + '/states';
 
-import { Gamepad, Button } from '@rbuljan/gamepad';
+import { Button, Gamepad } from '@rbuljan/gamepad';
 import { primaryInput } from 'detect-it';
+import fetchProgress from 'fetch-progress';
 import { Nostalgist } from 'nostalgist';
+import ProgressBar from 'progressbar.js';
 import { Spinner } from 'spin.js';
 
-let spinner: Spinner | null = null;
+const spinner = new Spinner({
+  color: '#fff',
+});
 const spinnerTarget = document.getElementById('spinner-target');
 if (spinnerTarget !== null) {
-  spinner = new Spinner().spin(spinnerTarget);
+  spinner.spin(spinnerTarget);
 }
+
+const progressbarTarget = document.getElementById('progressbar-target');
+const bar = new ProgressBar.Circle(progressbarTarget, {
+  color: '#fff',
+  strokeWidth: 6.0,
+  step: (_, bar) => {
+    // @ts-ignore
+    bar.setText(Math.round(bar.value() * 100) + '%');
+  }
+});
+bar.text!.style.fontSize = '20px';
+
+let currentBytes = 0;
+let totalBytes = 0;
+
+const updateBar = () => {
+  if (currentBytes !== 0 && progressbarTarget !== null) {
+    spinner.stop();
+    progressbarTarget.style.display = 'initial';
+  }
+  bar.set(isNaN(totalBytes) || !isFinite(totalBytes) || totalBytes === 0 ? 0 : currentBytes / totalBytes);
+};
 
 // Disable bfcache because it causes the WebAssembly module to crash when this page is restored from bfcache
 window.addEventListener('pageshow', (ev) => {
@@ -93,7 +119,19 @@ const fetchWithCache = async (path: string) => {
   }
 
   if (blob === undefined) {
-    const response = await fetch(path);
+    let fetchedBytes = 0;
+    const response = await fetch(path)
+      .then(fetchProgress({
+        onProgress: (progress) => {
+          if (fetchedBytes === 0 && progress.transferred !== 0) {
+            totalBytes += progress.total;
+          }
+          currentBytes += progress.transferred - fetchedBytes;
+          fetchedBytes = progress.transferred;
+          updateBar();
+        },
+      }));
+
     blob = await response.blob();
 
     try {
@@ -181,7 +219,8 @@ await new Promise<void>((resolve, reject) => {
   });
 });
 
-spinner?.stop();
+bar.destroy();
+spinner.stop();
 
 // Force the user to interact with the browser once before starting the game;
 // otherwise the audio will not work because audio is gated behind sticky activation
