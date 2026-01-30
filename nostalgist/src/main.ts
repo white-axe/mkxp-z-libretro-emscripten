@@ -12,10 +12,15 @@ const RTP_SIZE = parseInt(import.meta.env.VITE_RTP_SIZE);
 const GAME_PATH: string | undefined = import.meta.env.VITE_GAME_PATH;
 const RTP_PATH: string | undefined = import.meta.env.VITE_RTP_PATH;
 const XP_CONTROLS = import.meta.env.VITE_XP_CONTROLS !== undefined && import.meta.env.VITE_XP_CONTROLS !== 'false';
+const GAME_NAME: string | undefined = import.meta.env.VITE_GAME_NAME;
 
 // These can be arbitrary
 const SAVE_DIRECTORY = '/' + CORE_NAME + '/saves';
 const STATE_DIRECTORY = '/' + CORE_NAME + '/states';
+
+if (GAME_NAME !== undefined) {
+  document.title = GAME_NAME;
+}
 
 const spinner = new Spinner({
   color: '#fff',
