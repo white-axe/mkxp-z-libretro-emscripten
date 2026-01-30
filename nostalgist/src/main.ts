@@ -8,7 +8,9 @@ import { Spinner } from 'spin.js';
 const CORE_NAME = 'mkxp-z';
 const CORE_SIZE = parseInt(import.meta.env.VITE_CORE_SIZE);
 const GAME_SIZE = parseInt(import.meta.env.VITE_GAME_SIZE);
+const RTP_SIZE = parseInt(import.meta.env.VITE_RTP_SIZE);
 const GAME_PATH: string | undefined = import.meta.env.VITE_GAME_PATH;
+const RTP_PATH: string | undefined = import.meta.env.VITE_RTP_PATH;
 const XP_CONTROLS = import.meta.env.VITE_XP_CONTROLS !== undefined && import.meta.env.VITE_XP_CONTROLS !== 'false';
 
 // These can be arbitrary
@@ -178,7 +180,11 @@ const nostalgist = await Nostalgist.prepare({
     js: './' + CORE_NAME + '_libretro.js',
     wasm: fetchWithCache('./' + CORE_NAME + '_libretro.wasm', CORE_SIZE),
   },
-  rom: fetchWithCache(GAME_PATH ?? '', GAME_SIZE),
+  rom: GAME_PATH === undefined ? undefined : fetchWithCache(GAME_PATH, GAME_SIZE),
+  bios: RTP_PATH === undefined ? undefined : {
+    fileName: 'RTP.mkxpz',
+    fileContent: fetchWithCache(RTP_PATH, RTP_SIZE),
+  },
   element: '#nostalgist-canvas',
   retroarchConfig: {
     savefile_directory: SAVE_DIRECTORY,
@@ -206,8 +212,17 @@ const nostalgist = await Nostalgist.prepare({
   },
 });
 
-// Persist saves and save states to IndexedDB so that the user doesn't lose all of their saves and save states whenever the page is reloaded or closed
 const fs = nostalgist.getEmscriptenFS();
+
+// Move the RTP to the correct path
+if (RTP_PATH !== undefined) {
+  const system_directory = '/home/web_user/retroarch/userdata/system';
+  const system_directory_subdirectory = system_directory + '/mkxp-z/RTP';
+  fs.mkdirTree(system_directory_subdirectory);
+  fs.rename(system_directory + '/RTP.mkxpz', system_directory_subdirectory + '/' + RTP_PATH.split('/').slice(-1)[0]);
+}
+
+// Persist saves and save states to IndexedDB so that the user doesn't lose all of their saves and save states whenever the page is reloaded or closed
 fs.mkdirTree(SAVE_DIRECTORY);
 fs.mkdirTree(STATE_DIRECTORY);
 fs.mount(fs.filesystems.IDBFS, {autoPersist: true}, SAVE_DIRECTORY);

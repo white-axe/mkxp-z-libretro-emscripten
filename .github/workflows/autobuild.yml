@@ -180,27 +180,83 @@ jobs:
             retroarch/mkxp-z_libretro.js
             retroarch/mkxp-z_libretro.wasm
 
-  download-crysalis:
-    name: Download Crysalis
+  download-rpg-maker-xp-rtp:
+    name: Download RPG Maker XP run time package
     runs-on: ubuntu-slim
     steps:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip 7zip innoextract
+          sudo apt install -y curl innoextract
 
-      - name: Restore game from cache
-        id: cache-game
+      - name: Restore run time package from cache
+        id: cache-rtp
         uses: actions/cache@v5
         with:
-          key: crysalis.zip
-          path: crysalis.zip
+          key: xp_rtp104e.exe
+          path: xp_rtp104e.exe
 
-      - name: Download game if not cached
-        if: steps.cache-game.outputs.cache-hit != 'true'
+      - name: Download run time package if not cached
+        if: steps.cache-rtp.outputs.cache-hit != 'true'
         run: |
-          curl -Lko crysalis.zip https://dl.komodo.jp/rpgmakerweb/sample-games/crysalis.zip
-          [ "$(sha256sum crysalis.zip | cut -d ' ' -f 1)" = '8388d84097e8427abf22fcd110abd98d5892991987259d5bfc0b75eabea74763' ]
+          curl -Lko xp_rtp104e.exe https://dl.komodo.jp/rpgmakerweb/run-time-packages/xp_rtp104e.exe
+          [ "$(sha256sum xp_rtp104e.exe | cut -d ' ' -f 1)" = 'b3bd20ad7f413b40ac233aafd2e061de1dc429c2eadb59d0b3157ba3c47f16b2' ]
+
+      - name: Pack run time package files
+        run: |
+          innoextract xp_rtp104e.exe
+          cd app
+          zip -r0 ../Standard.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Standard.mkxpz
+          path: Standard.mkxpz
+
+  download-rpg-maker-vx-rtp:
+    name: Download RPG Maker VX run time package
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl zip innoextract
+
+      - name: Restore run time package from cache
+        id: cache-rtp
+        uses: actions/cache@v5
+        with:
+          key: vx_rtp102e.zip
+          path: vx_rtp102e.zip
+
+      - name: Download run time package if not cached
+        if: steps.cache-rtp.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko vx_rtp102e.zip https://dl.komodo.jp/rpgmakerweb/run-time-packages/vx_rtp102e.zip
+          [ "$(sha256sum vx_rtp102e.zip | cut -d ' ' -f 1)" = '8c82c02c876391d9585934454a629748d71b421c4957ada1dff8dc4b013ce403' ]
+
+      - name: Pack run time package files
+        run: |
+          unzip vx_rtp102e.zip
+          innoextract RPGVX_RTP/Setup.exe
+          cd app
+          zip -r0 ../RPGVX.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RPGVX.mkxpz
+          path: RPGVX.mkxpz
+
+  download-rpg-maker-vx-ace-rtp:
+    name: Download RPG Maker VX Ace run time package
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl zip innoextract
 
       - name: Restore run time package from cache
         id: cache-rtp
@@ -215,14 +271,46 @@ jobs:
           curl -Lko RPGVXAce_RTP.zip https://dl.komodo.jp/rpgmakerweb/run-time-packages/RPGVXAce_RTP.zip
           [ "$(sha256sum RPGVXAce_RTP.zip | cut -d ' ' -f 1)" = '7e93d0ead93a686218b7c671bf099ef42f09f536083bd0b2f0fa6423a39fc19b' ]
 
+      - name: Pack run time package files
+        run: |
+          unzip RPGVXAce_RTP.zip
+          innoextract RTP100/Setup.exe
+          cd app
+          zip -r0 ../RPGVXAce.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RPGVXAce.mkxpz
+          path: RPGVXAce.mkxpz
+
+  download-crysalis:
+    name: Download Crysalis
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl zip 7zip
+
+      - name: Restore game from cache
+        id: cache-game
+        uses: actions/cache@v5
+        with:
+          key: crysalis.zip
+          path: crysalis.zip
+
+      - name: Download game if not cached
+        if: steps.cache-game.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko crysalis.zip https://dl.komodo.jp/rpgmakerweb/sample-games/crysalis.zip
+          [ "$(sha256sum crysalis.zip | cut -d ' ' -f 1)" = '8388d84097e8427abf22fcd110abd98d5892991987259d5bfc0b75eabea74763' ]
+
       - name: Pack game files
         run: |
           unzip crysalis.zip
           7z x -ocrysalis Crysalis.exe
-          unzip RPGVXAce_RTP.zip
-          innoextract RTP100/Setup.exe
-          cp -r crysalis/* app/
-          cd app
+          cd crysalis
           zip -r0 ../crysalis.mkxpz *
 
       - name: Upload artifact
@@ -253,25 +341,10 @@ jobs:
           curl -Lko knight-blade-howling-of-kerberos.zip https://dl.komodo.jp/rpgmakerweb/sample-games/knight-blade-howling-of-kerberos.zip
           [ "$(sha256sum knight-blade-howling-of-kerberos.zip | cut -d ' ' -f 1)" = 'a47c9cf1eaa466fc0fcd5e4fff0143881d318a71424fe1fab823aa95acaac58c' ]
 
-      - name: Restore run time package from cache
-        id: cache-rtp
-        uses: actions/cache@v5
-        with:
-          key: xp_rtp104e.exe
-          path: xp_rtp104e.exe
-
-      - name: Download run time package if not cached
-        if: steps.cache-rtp.outputs.cache-hit != 'true'
-        run: |
-          curl -Lko xp_rtp104e.exe https://dl.komodo.jp/rpgmakerweb/run-time-packages/xp_rtp104e.exe
-          [ "$(sha256sum xp_rtp104e.exe | cut -d ' ' -f 1)" = 'b3bd20ad7f413b40ac233aafd2e061de1dc429c2eadb59d0b3157ba3c47f16b2' ]
-
       - name: Pack game files
         run: |
           unzip knight-blade-howling-of-kerberos.zip
-          innoextract xp_rtp104e.exe
-          cp -r KN_E/* app/
-          cd app
+          cd KN_E
           zip -r0 ../knight-blade-howling-of-kerberos.mkxpz *
 
       - name: Upload artifact
@@ -366,17 +439,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - id: crysalis
-            name: Crysalis
+          - name: Crysalis
+            id: crysalis
+            rtp: RPGVXAce
             xp: false
-          - id: knight-blade-howling-of-kerberos
-            name: 'KNight-Blade: Howling of Kerberos'
+          - name: 'KNight-Blade: Howling of Kerberos'
+            id: knight-blade-howling-of-kerberos
+            rtp: Standard
             xp: true
-          - id: star-stealing-prince
-            name: Star Stealing Prince
+          - name: Star Stealing Prince
+            id: star-stealing-prince
+            rtp: None
             xp: false
     needs:
       - build-frontend-idbfs
+      - download-rpg-maker-xp-rtp
+      - download-rpg-maker-vx-rtp
+      - download-rpg-maker-vx-ace-rtp
       - download-crysalis
       - download-knight-blade-howling-of-kerberos
       - download-star-stealing-prince
@@ -399,19 +478,34 @@ jobs:
         with:
           name: ${{ matrix.id }}.mkxpz
 
+      - name: Download run time package
+        if: matrix.rtp != 'None'
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ matrix.rtp }}.mkxpz
+
       - name: Build Nostalgist.js
         run: |
-          mv ${{ matrix.id }}.mkxpz nostalgist/public/
+          mv coi-serviceworker/coi-serviceworker.js nostalgist/public/
 
           mv retroarch/mkxp-z_libretro.js nostalgist/public/
           mv retroarch/mkxp-z_libretro.wasm nostalgist/public/
           sed -i '1s/^/if (typeof location === "object") import.meta.url = location.href;/' nostalgist/public/mkxp-z_libretro.js # Fixes a bug that prevents Nostalgist.js from loading threaded cores
 
-          mv coi-serviceworker/coi-serviceworker.js nostalgist/public/
+          mv ${{ matrix.id }}.mkxpz nostalgist/public/
+          if [ '${{ matrix.rtp }}' != 'None' ]
+          then
+            mv ${{ matrix.rtp }}.mkxpz nostalgist/public/
+          fi
 
           echo "VITE_CORE_SIZE=$(du -b nostalgist/public/mkxp-z_libretro.wasm | cut -f 1)" >> nostalgist/.env
           echo "VITE_GAME_SIZE=$(du -b nostalgist/public/${{ matrix.id }}.mkxpz | cut -f 1)" >> nostalgist/.env
           echo 'VITE_GAME_PATH=./${{ matrix.id }}.mkxpz' >> nostalgist/.env
+          if [ '${{ matrix.rtp }}' != 'None' ]
+          then
+            echo "VITE_RTP_SIZE=$(du -b nostalgist/public/${{ matrix.rtp }}.mkxpz | cut -f 1)" >> nostalgist/.env
+            echo 'VITE_RTP_PATH=./${{ matrix.rtp }}.mkxpz' >> nostalgist/.env
+          fi
           echo 'VITE_XP_CONTROLS=${{ matrix.xp }}' >> nostalgist/.env
 
           cd nostalgist
