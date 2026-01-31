@@ -434,6 +434,19 @@ jobs:
           name: mkxp-z_libretro_retroarch_web_player
           path: retroarch/pkg/emscripten/libretro-thread
 
+  lint-nostalgist:
+    name: Lint Nostalgist.js
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Lint
+        run: |
+          cd nostalgist
+          npm install
+          npm run lint
+
   build-nostalgist:
     strategy:
       fail-fast: false
@@ -452,6 +465,7 @@ jobs:
             rtp: None
             xp: false
     needs:
+      - lint-nostalgist
       - build-frontend-idbfs
       - download-rpg-maker-xp-rtp
       - download-rpg-maker-vx-rtp
