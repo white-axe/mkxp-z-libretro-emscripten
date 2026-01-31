@@ -10,10 +10,6 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   build-stage1:
     name: Build stage 1
@@ -585,7 +581,15 @@ jobs:
           path: dist
           retention-days: 90
 
+  deploy-website:
+    needs: build-website
+    name: Deploy to GitHub Pages
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    runs-on: ubuntu-slim
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         uses: actions/deploy-pages@v4
