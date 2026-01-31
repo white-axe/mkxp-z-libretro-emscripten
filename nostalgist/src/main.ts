@@ -137,8 +137,9 @@ const fetchWithCache = async (path: string, size: number) => {
       if (
         result !== undefined &&
         result.blob.size === size &&
-        result.etag === etag &&
-        result.lastModified == lastModified
+        (etag !== null
+          ? result.etag === etag
+          : result.lastModified === lastModified)
       ) {
         blob = result.blob;
       }
