@@ -214,56 +214,55 @@ const fetchWithCache = async (
 
       headers = response.headers;
       blob = await response.blob();
-    }
-
-    if (
-      blobSource ===
-      (HAVE_OPFS && opfsPath !== undefined ? "opfs" : "indexeddb")
-    ) {
+    } else {
       currentBytes += size;
       updateBar();
-      return blob;
     }
 
-    if (!HAVE_OPFS) {
-      opfsPath = undefined;
-    }
+    // Store the blob into IndexedDB and OPFS if needed
+    if (
+      blobSource !==
+      (HAVE_OPFS && opfsPath !== undefined ? "opfs" : "indexeddb")
+    ) {
+      if (!HAVE_OPFS) {
+        opfsPath = undefined;
+      }
 
-    // Store the blob into IndexedDB and OPFS as needed
-    try {
-      db.cache.put({
-        path,
-        blob: opfsPath !== undefined ? null : blob,
-        etag: headers.get("ETag"),
-        lastModified: headers.get("Last-Modified"),
-      });
-    } catch (err) {
-      console.error(err);
-    }
-
-    if (opfsPath !== undefined) {
       try {
-        let directory = opfs;
-        const elements = opfsPath
-          .split("/")
-          .filter((element) => element.length !== 0);
-        if (elements.length > 0) {
-          for (const element of elements.slice(0, -1)) {
-            directory = await directory.getDirectoryHandle(element, {
-              create: true,
-            });
-          }
-          const fileHandle = await directory.getFileHandle(
-            elements.slice(-1)[0],
-            { create: true },
-          );
-          const fileStream = await fileHandle.createWritable();
-          await fileStream.write(blob);
-          await fileStream.close();
-          blob = await fileHandle.getFile();
-        }
+        db.cache.put({
+          path,
+          blob: opfsPath !== undefined ? null : blob,
+          etag: headers.get("ETag"),
+          lastModified: headers.get("Last-Modified"),
+        });
       } catch (err) {
         console.error(err);
+      }
+
+      if (opfsPath !== undefined) {
+        try {
+          let directory = opfs;
+          const elements = opfsPath
+            .split("/")
+            .filter((element) => element.length !== 0);
+          if (elements.length > 0) {
+            for (const element of elements.slice(0, -1)) {
+              directory = await directory.getDirectoryHandle(element, {
+                create: true,
+              });
+            }
+            const fileHandle = await directory.getFileHandle(
+              elements.slice(-1)[0],
+              { create: true },
+            );
+            const fileStream = await fileHandle.createWritable();
+            await fileStream.write(blob);
+            await fileStream.close();
+            blob = await fileHandle.getFile();
+          }
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
 
