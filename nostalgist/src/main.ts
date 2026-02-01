@@ -128,12 +128,14 @@ const sessionStorageKey =
 if (window.sessionStorage.getItem(sessionStorageKey) !== "ready") {
   window.sessionStorage.setItem(sessionStorageKey, "ready");
   location.reload();
+  throw "Reloading once to make coi-serviceworker.js less flaky";
 }
 if (!window.crossOriginIsolated) {
   console.error(
     "Cross-origin isolation is not enabled; reloading to enable it",
   );
   location.reload();
+  throw "Reloading to enable cross-origin isolation";
 }
 
 const opfs = await (async () => {
