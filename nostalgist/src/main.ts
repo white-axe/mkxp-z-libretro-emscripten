@@ -1,26 +1,64 @@
 import { Button, Gamepad } from "@rbuljan/gamepad";
 import { primaryInput } from "detect-it";
+import { Dexie, type EntityTable } from "dexie";
 import fetchProgress from "fetch-progress";
 import { Nostalgist } from "nostalgist";
 import ProgressBar from "progressbar.js";
 import { Spinner } from "spin.js";
 
 const CORE_NAME = "mkxp-z";
+
+// True if RetroArch was built with OPFS support by passing
+// `HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1`
+// when building RetroArch and building the core with `-pthread`, otherwise false.
+// It's highly recommended to build with OPFS support because it allows loading downloaded games/RTPs directly from the disk instead of loading the entire game/RTP into memory.
+const HAVE_OPFS =
+  typeof import.meta.env.VITE_HAVE_OPFS !== "string" ||
+  import.meta.env.VITE_HAVE_OPFS !== "false";
+
+const CORE_PATH = new URL(
+  "./" + CORE_NAME + "_libretro.wasm",
+  location.href,
+).toString();
+const GAME_PATH: string | null =
+  typeof import.meta.env.VITE_GAME_PATH === "string"
+    ? new URL(import.meta.env.VITE_GAME_PATH, location.href).toString()
+    : null;
+const RTP_PATH: string | null =
+  typeof import.meta.env.VITE_RTP_PATH === "string"
+    ? new URL(import.meta.env.VITE_RTP_PATH, location.href).toString()
+    : null;
+
 const CORE_SIZE = parseInt(import.meta.env.VITE_CORE_SIZE);
 const GAME_SIZE = parseInt(import.meta.env.VITE_GAME_SIZE);
 const RTP_SIZE = parseInt(import.meta.env.VITE_RTP_SIZE);
-const GAME_PATH: string | undefined = import.meta.env.VITE_GAME_PATH;
-const RTP_PATH: string | undefined = import.meta.env.VITE_RTP_PATH;
+
 const XP_CONTROLS =
-  import.meta.env.VITE_XP_CONTROLS !== undefined &&
+  typeof import.meta.env.VITE_XP_CONTROLS === "string" &&
   import.meta.env.VITE_XP_CONTROLS !== "false";
-const GAME_NAME: string | undefined = import.meta.env.VITE_GAME_NAME;
 
-// These can be arbitrary
-const SAVE_DIRECTORY = "/" + CORE_NAME + "/saves";
-const STATE_DIRECTORY = "/" + CORE_NAME + "/states";
+const GAME_NAME: string | null =
+  typeof import.meta.env.VITE_GAME_NAME === "string"
+    ? import.meta.env.VITE_GAME_NAME
+    : null;
 
-if (GAME_NAME !== undefined) {
+// This can be arbitrary but needs to have at least two path elements when using OPFS
+const PERSISTENT_DIRECTORY = "/nostalgist/persistent";
+
+// These can be arbitrary subdirectories of the persistent directory
+const SAVE_DIRECTORY = PERSISTENT_DIRECTORY + "/saves/" + CORE_NAME;
+const STATE_DIRECTORY = PERSISTENT_DIRECTORY + "/states/" + CORE_NAME;
+const OPFS_SYSTEM_DIRECTORY = PERSISTENT_DIRECTORY + "/system/" + CORE_NAME;
+
+const GAME_OPFS_PATH = GAME_PATH === null ? null : btoa(GAME_PATH) + ".mkxpz";
+const RTP_OPFS_PATH =
+  RTP_PATH === null
+    ? null
+    : OPFS_SYSTEM_DIRECTORY.slice(PERSISTENT_DIRECTORY.length) +
+      "/mkxp-z/RTP/" +
+      RTP_PATH.split("/").slice(-1)[0];
+
+if (GAME_NAME !== null) {
   document.title = GAME_NAME;
 }
 
@@ -82,152 +120,209 @@ if (!window.crossOriginIsolated) {
   location.reload();
 }
 
-// Fetches a file and caches it in IndexedDB to improve subsequent load times
-const fetchWithCache = async (path: string, size: number) => {
-  path = new URL(path, location.href).toString();
+const opfs = await navigator.storage.getDirectory();
+
+const fetchWithCache = async (
+  size: number,
+  path: string,
+  opfsPath?: string,
+) => {
   totalBytes += size;
   updateBar();
 
   let blob: Blob | undefined = undefined;
+  let blobSource: "fetch" | "indexeddb" | "opfs" = "fetch";
 
-  const getCacheStore = () => {
-    const openRequest = indexedDB.open(CORE_NAME, 1);
-    openRequest.onupgradeneeded = () => {
-      const db = openRequest.result;
-      db.createObjectStore("cache", { keyPath: "path" });
-    };
-    return openRequest;
-  };
-
-  const headers = (await fetch(path, { method: "HEAD" })).headers;
+  let headers = (await fetch(path, { method: "HEAD" })).headers;
   const etag = headers.get("ETag");
   const lastModified = headers.get("Last-Modified");
 
-  if (etag !== null || lastModified !== null) {
-    try {
-      const result = await new Promise<
-        | { blob: Blob; etag: string | null; lastModified: string | null }
-        | undefined
-      >((resolve, reject) => {
-        try {
-          const openRequest = getCacheStore();
-          openRequest.onsuccess = () => {
-            try {
-              const db = openRequest.result;
-              const tx = db.transaction("cache", "readonly");
-              const store = tx.objectStore("cache");
-              const getRequest = store.get(path);
-              getRequest.onsuccess = () => {
-                resolve(getRequest.result);
-              };
-              getRequest.onerror = () => {
-                reject(getRequest.error);
-              };
-            } catch (err) {
-              reject(err);
-            }
-          };
-          openRequest.onerror = () => {
-            reject(openRequest.error);
-          };
-        } catch (err) {
-          reject(err);
-        }
-      });
-      if (
-        result !== undefined &&
-        result.blob.size === size &&
-        (etag !== null
-          ? result.etag === etag
-          : result.lastModified === lastModified)
-      ) {
-        blob = result.blob;
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  const db = new Dexie("nostalgist cache for " + CORE_NAME) as Dexie & {
+    cache: EntityTable<
+      {
+        path: string;
+        blob: Blob | null;
+        etag: string | null;
+        lastModified: string | null;
+      },
+      "path"
+    >;
+  };
+  db.version(1).stores({
+    cache: "path",
+  });
 
-  if (blob !== undefined) {
-    currentBytes += size;
-    updateBar();
-  } else {
-    let fetchedBytes = 0;
-    const response = await fetch(path).then(
-      fetchProgress({
-        onProgress: (progress) => {
-          currentBytes += progress.transferred - fetchedBytes;
-          fetchedBytes = progress.transferred;
-          updateBar();
-          if (progressbarTarget !== null) {
-            spinner.stop();
-            progressbarTarget.style.display = "initial";
+  try {
+    // Try restoring the blob from IndexedDB and OPFS
+    if (etag !== null || lastModified !== null) {
+      try {
+        const result = await db.cache.get(path);
+        if (
+          result !== undefined &&
+          (etag !== null
+            ? result.etag === etag
+            : result.lastModified === lastModified) &&
+          (result.blob === null || result.blob.size === size)
+        ) {
+          if (result.blob !== null) {
+            blobSource = "indexeddb";
+            blob = result.blob;
+          } else if (opfsPath !== undefined) {
+            let directory = opfs;
+            const elements = opfsPath
+              .split("/")
+              .filter((element) => element.length !== 0);
+            if (elements.length > 0) {
+              for (const element of elements.slice(0, -1)) {
+                directory = await directory.getDirectoryHandle(element, {
+                  create: true,
+                });
+              }
+              const fileHandle = await directory.getFileHandle(
+                elements.slice(-1)[0],
+              );
+              const fileBlob = await fileHandle.getFile();
+              if (fileBlob.size === size) {
+                blobSource = "opfs";
+                blob = fileBlob;
+              }
+            }
           }
-        },
-      }),
-    );
-
-    blob = await response.blob();
-
-    try {
-      await new Promise<void>((resolve, reject) => {
-        try {
-          const openRequest = getCacheStore();
-          openRequest.onsuccess = () => {
-            try {
-              const db = openRequest.result;
-              const tx = db.transaction("cache", "readwrite");
-              const store = tx.objectStore("cache");
-              const putRequest = store.put({
-                path,
-                blob,
-                etag: response.headers.get("ETag"),
-                lastModified: response.headers.get("Last-Modified"),
-              });
-              putRequest.onsuccess = () => {
-                resolve();
-              };
-              putRequest.onerror = () => {
-                reject(putRequest.error);
-              };
-            } catch (err) {
-              reject(err);
-            }
-          };
-          openRequest.onerror = () => {
-            reject(openRequest.error);
-          };
-        } catch (err) {
-          reject(err);
         }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // If the blob is not cached, fetch it instead
+    if (blob === undefined) {
+      let fetchedBytes = 0;
+
+      const response = await fetch(path).then(
+        fetchProgress({
+          onProgress: (progress) => {
+            currentBytes += progress.transferred - fetchedBytes;
+            fetchedBytes = progress.transferred;
+            updateBar();
+            if (progressbarTarget !== null) {
+              spinner.stop();
+              progressbarTarget.style.display = "initial";
+            }
+          },
+        }),
+      );
+
+      headers = response.headers;
+      blob = await response.blob();
+    }
+
+    if (
+      blobSource ===
+      (HAVE_OPFS && opfsPath !== undefined ? "opfs" : "indexeddb")
+    ) {
+      currentBytes += size;
+      updateBar();
+      return blob;
+    }
+
+    if (!HAVE_OPFS) {
+      opfsPath = undefined;
+    }
+
+    // Store the blob into IndexedDB and OPFS as needed
+    try {
+      db.cache.put({
+        path,
+        blob: opfsPath !== undefined ? null : blob,
+        etag: headers.get("ETag"),
+        lastModified: headers.get("Last-Modified"),
       });
     } catch (err) {
       console.error(err);
     }
-  }
 
-  return blob;
+    if (opfsPath !== undefined) {
+      try {
+        let directory = opfs;
+        const elements = opfsPath
+          .split("/")
+          .filter((element) => element.length !== 0);
+        if (elements.length > 0) {
+          for (const element of elements.slice(0, -1)) {
+            directory = await directory.getDirectoryHandle(element, {
+              create: true,
+            });
+          }
+          const fileHandle = await directory.getFileHandle(
+            elements.slice(-1)[0],
+            { create: true },
+          );
+          const fileStream = await fileHandle.createWritable();
+          await fileStream.write(blob);
+          await fileStream.close();
+          blob = await fileHandle.getFile();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    return blob;
+  } finally {
+    db.close();
+  }
 };
+
+const [coreBlob, gameBlob, rtpBlob] = await Promise.all([
+  fetchWithCache(CORE_SIZE, CORE_PATH),
+  GAME_PATH === null
+    ? null
+    : fetchWithCache(GAME_SIZE, GAME_PATH, GAME_OPFS_PATH ?? undefined),
+  RTP_PATH === null
+    ? null
+    : fetchWithCache(RTP_SIZE, RTP_PATH, RTP_OPFS_PATH ?? undefined),
+]);
 
 const nostalgist = await Nostalgist.prepare({
   core: {
     name: CORE_NAME.replace(/-/g, "_"),
     js: "./" + CORE_NAME + "_libretro.js",
-    wasm: fetchWithCache("./" + CORE_NAME + "_libretro.wasm", CORE_SIZE),
+    wasm: coreBlob,
   },
   rom:
-    GAME_PATH === undefined ? undefined : fetchWithCache(GAME_PATH, GAME_SIZE),
+    HAVE_OPFS || GAME_PATH === null || gameBlob === null
+      ? undefined
+      : {
+          fileName: btoa(GAME_PATH) + ".mkxpz",
+          fileContent: gameBlob,
+        },
   bios:
-    RTP_PATH === undefined
+    HAVE_OPFS || rtpBlob === null
       ? undefined
       : {
           fileName: "RTP.mkxpz",
-          fileContent: fetchWithCache(RTP_PATH, RTP_SIZE),
+          fileContent: rtpBlob,
         },
+  emscriptenModule: {
+    preRun: [
+      (module) => {
+        // When RetroArch is built with WasmFS support, there will not be an init() function on the filesystem,
+        // but Nostalgist.js expects there to be one, so create a dummy init function in that case
+        if (typeof module.FS.init !== "function") {
+          module.FS.init = () => {};
+        }
+        // Indicate to RetroArch that we want to enable OPFS support if it's supported
+        module.ENV.OPFS_MOUNT = PERSISTENT_DIRECTORY;
+      },
+    ],
+  },
   element: "#nostalgist-canvas",
   retroarchConfig: {
     savefile_directory: SAVE_DIRECTORY,
     savestate_directory: STATE_DIRECTORY,
+    system_directory: HAVE_OPFS
+      ? OPFS_SYSTEM_DIRECTORY
+      : "/home/web_user/retroarch/userdata/system",
     input_toggle_fast_forward: "space",
     input_hold_fast_forward: "l",
     input_toggle_slowmotion: "g",
@@ -254,31 +349,61 @@ const nostalgist = await Nostalgist.prepare({
 
 const fs = nostalgist.getEmscriptenFS();
 
-// Move the RTP to the correct path
-if (RTP_PATH !== undefined) {
-  const system_directory = "/home/web_user/retroarch/userdata/system";
-  const system_directory_subdirectory = system_directory + "/mkxp-z/RTP";
-  fs.mkdirTree(system_directory_subdirectory);
-  fs.rename(
-    system_directory + "/RTP.mkxpz",
-    system_directory_subdirectory + "/" + RTP_PATH.split("/").slice(-1)[0],
-  );
-}
-
-// Persist saves and save states to IndexedDB so that the user doesn't lose all of their saves and save states whenever the page is reloaded or closed
-fs.mkdirTree(SAVE_DIRECTORY);
-fs.mkdirTree(STATE_DIRECTORY);
-fs.mount(fs.filesystems.IDBFS, { autoPersist: true }, SAVE_DIRECTORY);
-fs.mount(fs.filesystems.IDBFS, { autoPersist: true }, STATE_DIRECTORY);
-await new Promise<void>((resolve, reject) => {
-  fs.syncfs(true, (err: Error | null) => {
-    if (err === null) {
-      resolve();
-    } else {
-      reject(err);
+if (HAVE_OPFS) {
+  // Create the save, state and system directories
+  for (const directoryPath of [
+    SAVE_DIRECTORY,
+    STATE_DIRECTORY,
+    OPFS_SYSTEM_DIRECTORY,
+  ]) {
+    let directory = opfs;
+    for (const element of directoryPath
+      .slice(PERSISTENT_DIRECTORY.length)
+      .split("/")
+      .filter((element) => element.length !== 0)) {
+      directory = await directory.getDirectoryHandle(element, {
+        create: true,
+      });
     }
-  });
-});
+  }
+
+  // Tell RetroArch to load from OPFS
+  if (GAME_PATH !== null) {
+    const module = nostalgist.getEmscripten().Module;
+    const args: string[] = module.arguments ?? [];
+    args.push(PERSISTENT_DIRECTORY + "/" + btoa(GAME_PATH) + ".mkxpz");
+    module.arguments = args;
+  }
+} else {
+  // Move the RTP to the correct path
+  if (RTP_PATH !== null) {
+    const system_directory = "/home/web_user/retroarch/userdata/system";
+    const system_directory_subdirectory = system_directory + "/mkxp-z/RTP";
+    fs.mkdirTree(system_directory_subdirectory);
+    fs.rename(
+      system_directory + "/RTP.mkxpz",
+      system_directory_subdirectory + "/" + RTP_PATH.split("/").slice(-1)[0],
+    );
+  }
+
+  // If RetroArch was not built with OPFS support but was built with IDBFS support,
+  // persist saves and save states to IndexedDB so that the user doesn't lose all of their saves and save states whenever the page is reloaded or closed
+  if (fs.filesystems?.IDBFS !== undefined) {
+    fs.mkdirTree(SAVE_DIRECTORY);
+    fs.mkdirTree(STATE_DIRECTORY);
+    fs.mount(fs.filesystems.IDBFS, { autoPersist: true }, SAVE_DIRECTORY);
+    fs.mount(fs.filesystems.IDBFS, { autoPersist: true }, STATE_DIRECTORY);
+    await new Promise<void>((resolve, reject) => {
+      fs.syncfs(true, (err: Error | null) => {
+        if (err === null) {
+          resolve();
+        } else {
+          reject(err);
+        }
+      });
+    });
+  }
+}
 
 bar.destroy();
 spinner.stop();

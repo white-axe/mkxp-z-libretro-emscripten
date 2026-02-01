@@ -11,170 +11,18 @@ permissions:
   id-token: write
 
 jobs:
-  build-stage1:
-    name: Build stage 1
-    runs-on: ubuntu-latest
+  lint-nostalgist:
+    name: Lint Nostalgist.js
+    runs-on: ubuntu-slim
     steps:
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y curl build-essential automake libtool zip universal-ctags ruby
-
-      - name: Set up WASI SDK
-        run: |
-          curl -Lo ${{ runner.temp }}/wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-29/wasi-sdk-29.0-x86_64-linux.tar.gz
-          mkdir ${{ runner.temp }}/wasi-sdk
-          tar -xzf ${{ runner.temp }}/wasi-sdk.tar.gz -C ${{ runner.temp }}/wasi-sdk --strip-components=1
-          rm ${{ runner.temp }}/wasi-sdk.tar.gz
-
-      - name: Set up Binaryen
-        run: |
-          curl -Lo ${{ runner.temp }}/binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/version_125/binaryen-version_125-x86_64-linux.tar.gz
-          mkdir ${{ runner.temp }}/binaryen
-          tar -xzf ${{ runner.temp }}/binaryen.tar.gz -C ${{ runner.temp }}/binaryen --strip-components=1
-          rm ${{ runner.temp }}/binaryen.tar.gz
-
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          submodules: recursive
 
-      - name: Build stage 1
+      - name: Lint
         run: |
-          cd mkxp-z/libretro
-          CLICOLOR_FORCE=1 make -j $(nproc) WASI_SDK=${{ runner.temp }}/wasi-sdk WASM_OPT=${{ runner.temp }}/binaryen/bin/wasm-opt
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: stage1
-          path: mkxp-z/libretro/build/libretro-stage1
-
-  build-core:
-    needs: build-stage1
-    name: Build core
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y meson cmake
-
-      - name: Set up Emscripten SDK
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 4.0.8
-
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Download stage 1
-        uses: actions/download-artifact@v5
-        with:
-          name: stage1
-          path: mkxp-z/libretro/build/libretro-stage1
-
-      - name: Configure core
-        run: |
-          echo "[binaries]" | tee -a ${{ runner.temp }}/cross.ini
-          echo "c = 'emcc'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cpp = 'em++'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "ar = 'emar'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "[host_machine]" | tee -a ${{ runner.temp }}/cross.ini
-          echo "system = 'emscripten'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cpu_family = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cpu = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "endian = 'little'" | tee -a ${{ runner.temp }}/cross.ini
-          echo "[properties]" | tee -a ${{ runner.temp }}/cross.ini
-          echo "cmake_toolchain_file = '$(em-config EMSCRIPTEN_ROOT)/cmake/Modules/Platform/Emscripten.cmake'" | tee -a ${{ runner.temp }}/cross.ini
-          echo '--------------------------------------------------------------------------------'
-          cd mkxp-z
-          CLICOLOR_FORCE=1 meson setup build --cross-file ${{ runner.temp }}/cross.ini --buildtype release -Db_lto=true -Dlibretro=true -Dlibretro_save_states=true -Demscripten_threaded=true
-
-      - name: Build core
-        run: |
-          cd mkxp-z/build
-          CLICOLOR_FORCE=1 ninja -v
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: mkxp-z_libretro.a
-          path: mkxp-z/build/mkxp-z_libretro.a
-
-  build-frontend-idbfs:
-    needs: build-core
-    name: Build frontend with IDBFS
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Emscripten SDK
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 4.0.8
-
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Download core
-        uses: actions/download-artifact@v5
-        with:
-          name: mkxp-z_libretro.a
-          path: mkxp-z/build
-
-      - name: Build frontend
-        run: |
-          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
-          cd retroarch
-          git apply ../retroarch.patch
-          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=0 HAVE_EXTRA_WASMFS=0
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: mkxp-z_libretro_idbfs
-          path: |
-            retroarch/mkxp-z_libretro.js
-            retroarch/mkxp-z_libretro.wasm
-
-  build-frontend-wasmfs:
-    needs: build-core
-    name: Build frontend with WasmFS
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Emscripten SDK
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 4.0.8
-
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Download core
-        uses: actions/download-artifact@v5
-        with:
-          name: mkxp-z_libretro.a
-          path: mkxp-z/build
-
-      - name: Build frontend
-        run: |
-          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
-          cd retroarch
-          git apply ../retroarch.patch
-          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: mkxp-z_libretro_wasmfs
-          path: |
-            retroarch/mkxp-z_libretro.js
-            retroarch/mkxp-z_libretro.wasm
+          cd nostalgist
+          npm install
+          npm run lint
 
   download-rpg-maker-xp-rtp:
     name: Download RPG Maker XP run time package
@@ -383,8 +231,137 @@ jobs:
           name: star-stealing-prince.mkxpz
           path: star-stealing-prince.mkxpz
 
+  build-stage1:
+    name: Build stage 1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl build-essential automake libtool zip universal-ctags ruby
+
+      - name: Set up WASI SDK
+        run: |
+          curl -Lo ${{ runner.temp }}/wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-29/wasi-sdk-29.0-x86_64-linux.tar.gz
+          mkdir ${{ runner.temp }}/wasi-sdk
+          tar -xzf ${{ runner.temp }}/wasi-sdk.tar.gz -C ${{ runner.temp }}/wasi-sdk --strip-components=1
+          rm ${{ runner.temp }}/wasi-sdk.tar.gz
+
+      - name: Set up Binaryen
+        run: |
+          curl -Lo ${{ runner.temp }}/binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/version_125/binaryen-version_125-x86_64-linux.tar.gz
+          mkdir ${{ runner.temp }}/binaryen
+          tar -xzf ${{ runner.temp }}/binaryen.tar.gz -C ${{ runner.temp }}/binaryen --strip-components=1
+          rm ${{ runner.temp }}/binaryen.tar.gz
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Build stage 1
+        run: |
+          cd mkxp-z/libretro
+          CLICOLOR_FORCE=1 make -j $(nproc) WASI_SDK=${{ runner.temp }}/wasi-sdk WASM_OPT=${{ runner.temp }}/binaryen/bin/wasm-opt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: stage1
+          path: mkxp-z/libretro/build/libretro-stage1
+
+  build-core:
+    needs: build-stage1
+    name: Build core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y meson cmake
+
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.8
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Download stage 1
+        uses: actions/download-artifact@v5
+        with:
+          name: stage1
+          path: mkxp-z/libretro/build/libretro-stage1
+
+      - name: Configure core
+        run: |
+          echo "[binaries]" | tee -a ${{ runner.temp }}/cross.ini
+          echo "c = 'emcc'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cpp = 'em++'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "ar = 'emar'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "[host_machine]" | tee -a ${{ runner.temp }}/cross.ini
+          echo "system = 'emscripten'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cpu_family = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cpu = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "endian = 'little'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "[properties]" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cmake_toolchain_file = '$(em-config EMSCRIPTEN_ROOT)/cmake/Modules/Platform/Emscripten.cmake'" | tee -a ${{ runner.temp }}/cross.ini
+          echo '--------------------------------------------------------------------------------'
+          cd mkxp-z
+          CLICOLOR_FORCE=1 meson setup build --cross-file ${{ runner.temp }}/cross.ini --buildtype release -Db_lto=true -Dlibretro=true -Dlibretro_save_states=true -Demscripten_threaded=true
+
+      - name: Build core
+        run: |
+          cd mkxp-z/build
+          CLICOLOR_FORCE=1 ninja -v
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro.a
+          path: mkxp-z/build/mkxp-z_libretro.a
+
+  build-frontend:
+    needs: build-core
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.8
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Download core
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro.a
+          path: mkxp-z/build
+
+      - name: Build frontend
+        run: |
+          mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
+          cd retroarch
+          git apply ../retroarch.patch
+          CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mkxp-z_libretro.wasm
+          path: |
+            retroarch/mkxp-z_libretro.js
+            retroarch/mkxp-z_libretro.wasm
+
   build-retroarch-web-player:
-    needs: build-frontend-wasmfs
+    needs: build-frontend
     name: Build RetroArch web player
     runs-on: ubuntu-slim
     steps:
@@ -396,7 +373,7 @@ jobs:
       - name: Download core + frontend
         uses: actions/download-artifact@v5
         with:
-          name: mkxp-z_libretro_wasmfs
+          name: mkxp-z_libretro.wasm
           path: retroarch
 
       - name: Build RetroArch web player
@@ -430,19 +407,6 @@ jobs:
           name: mkxp-z_libretro_retroarch_web_player
           path: retroarch/pkg/emscripten/libretro-thread
 
-  lint-nostalgist:
-    name: Lint Nostalgist.js
-    runs-on: ubuntu-slim
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Lint
-        run: |
-          cd nostalgist
-          npm install
-          npm run lint
-
   build-nostalgist:
     strategy:
       fail-fast: false
@@ -462,7 +426,7 @@ jobs:
             xp: false
     needs:
       - lint-nostalgist
-      - build-frontend-idbfs
+      - build-frontend
       - download-rpg-maker-xp-rtp
       - download-rpg-maker-vx-rtp
       - download-rpg-maker-vx-ace-rtp
@@ -480,7 +444,7 @@ jobs:
       - name: Download core + frontend
         uses: actions/download-artifact@v5
         with:
-          name: mkxp-z_libretro_idbfs
+          name: mkxp-z_libretro.wasm
           path: retroarch
 
       - name: Download game
