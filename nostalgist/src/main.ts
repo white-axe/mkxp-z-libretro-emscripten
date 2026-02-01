@@ -100,12 +100,23 @@ window.addEventListener("pageshow", (ev) => {
   }
 });
 
+// Multithreaded WebAssembly requires a secure context
+if (!window.isSecureContext) {
+  alert("This site only works if served over HTTPS.");
+  throw "Not a secure context";
+}
+
 // Wait for coi-serviceworker.js to load
-if (
-  !window.crossOriginIsolated &&
-  navigator.serviceWorker.controller === null
-) {
-  throw "coi-serviceworker.js is not ready yet";
+if (!window.crossOriginIsolated) {
+  if (!("serviceWorker" in navigator)) {
+    alert(
+      "This site cannot be used in private browsing mode in this browser. Either exit private browsing mode or try private browsing mode in a different browser.",
+    );
+    throw "Service workers are not available";
+  }
+  if (navigator.serviceWorker.controller === null) {
+    throw "coi-serviceworker.js is not ready yet";
+  }
 }
 const sessionStorageKey =
   "nostalgist status for " + CORE_NAME + " @ " + location.href;
