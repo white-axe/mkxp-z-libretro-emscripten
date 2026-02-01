@@ -120,7 +120,16 @@ if (!window.crossOriginIsolated) {
   location.reload();
 }
 
-const opfs = await navigator.storage.getDirectory();
+const opfs = await (async () => {
+  try {
+    return await navigator.storage.getDirectory();
+  } catch (err) {
+    alert(
+      "This site cannot be used in private browsing mode in this browser. Either exit private browsing mode or try private browsing mode in a different browser.",
+    );
+    throw err;
+  }
+})();
 
 const fetchWithCache = async (
   size: number,
