@@ -551,7 +551,7 @@ jobs:
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: pages
-      cancel-in-progress: true
+      cancel-in-progress: false
     runs-on: ubuntu-slim
     steps:
       - name: Deploy to GitHub Pages
