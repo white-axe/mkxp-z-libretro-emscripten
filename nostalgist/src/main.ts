@@ -16,10 +16,14 @@ const HAVE_OPFS =
   typeof import.meta.env.VITE_HAVE_OPFS !== "string" ||
   import.meta.env.VITE_HAVE_OPFS !== "false";
 
-const CORE_PATH = new URL(
-  "./" + CORE_NAME + "_libretro.wasm",
-  location.href,
-).toString();
+const CORE_JS_PATH =
+  typeof import.meta.env.VITE_CORE_JS_PATH === "string"
+    ? new URL(import.meta.env.VITE_CORE_JS_PATH, location.href).toString()
+    : new URL("./" + CORE_NAME + "_libretro.js", location.href).toString();
+const CORE_WASM_PATH =
+  typeof import.meta.env.VITE_CORE_WASM_PATH === "string"
+    ? new URL(import.meta.env.VITE_CORE_WASM_PATH, location.href).toString()
+    : new URL("./" + CORE_NAME + "_libretro.wasm", location.href).toString();
 const GAME_PATH: string | null =
   typeof import.meta.env.VITE_GAME_PATH === "string"
     ? new URL(import.meta.env.VITE_GAME_PATH, location.href).toString()
@@ -29,7 +33,8 @@ const RTP_PATH: string | null =
     ? new URL(import.meta.env.VITE_RTP_PATH, location.href).toString()
     : null;
 
-const CORE_SIZE = parseInt(import.meta.env.VITE_CORE_SIZE);
+const CORE_JS_SIZE = parseInt(import.meta.env.VITE_CORE_JS_SIZE);
+const CORE_WASM_SIZE = parseInt(import.meta.env.VITE_CORE_WASM_SIZE);
 const GAME_SIZE = parseInt(import.meta.env.VITE_GAME_SIZE);
 const RTP_SIZE = parseInt(import.meta.env.VITE_RTP_SIZE);
 
@@ -292,8 +297,9 @@ const fetchWithCache = async (
   }
 };
 
-const [coreBlob, gameBlob, rtpBlob] = await Promise.all([
-  fetchWithCache(CORE_SIZE, CORE_PATH),
+const [coreJsBlob, coreWasmBlob, gameBlob, rtpBlob] = await Promise.all([
+  fetchWithCache(CORE_JS_SIZE, CORE_JS_PATH),
+  fetchWithCache(CORE_WASM_SIZE, CORE_WASM_PATH),
   GAME_PATH === null
     ? null
     : fetchWithCache(GAME_SIZE, GAME_PATH, GAME_OPFS_PATH ?? undefined),
@@ -305,8 +311,8 @@ const [coreBlob, gameBlob, rtpBlob] = await Promise.all([
 const nostalgist = await Nostalgist.prepare({
   core: {
     name: CORE_NAME.replace(/-/g, "_"),
-    js: "./" + CORE_NAME + "_libretro.js",
-    wasm: coreBlob,
+    js: coreJsBlob,
+    wasm: coreWasmBlob,
   },
   rom:
     HAVE_OPFS || GAME_PATH === null || gameBlob === null
@@ -323,6 +329,8 @@ const nostalgist = await Nostalgist.prepare({
           fileContent: rtpBlob,
         },
   emscriptenModule: {
+    // @ts-expect-error This can be a blob even though Nostalgist.js thinks it can only be a string
+    mainScriptUrlOrBlob: coreJsBlob, // Work around a bug preventing Nostalgist.js from loading threaded cores
     preRun: [
       (module) => {
         // When RetroArch is built with WasmFS support, there will not be an init() function on the filesystem,
