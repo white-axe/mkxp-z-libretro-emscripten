@@ -11,18 +11,18 @@ permissions:
   id-token: write
 
 jobs:
-  lint-nostalgist:
-    name: Lint Nostalgist.js
+  check-nostalgist:
+    name: Check Nostalgist.js
     runs-on: ubuntu-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Lint
+      - name: Check
         run: |
           cd nostalgist
           npm install
-          npm run lint
+          npm run build
 
   download-rpg-maker-xp-rtp:
     name: Download RPG Maker XP run time package
@@ -425,7 +425,7 @@ jobs:
             rtp: None
             xp: false
     needs:
-      - lint-nostalgist
+      - check-nostalgist
       - build-frontend
       - download-rpg-maker-xp-rtp
       - download-rpg-maker-vx-rtp
