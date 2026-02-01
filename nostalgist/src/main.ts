@@ -386,11 +386,11 @@ if (HAVE_OPFS) {
     }
   }
 
-  // Tell RetroArch to load from OPFS
+  // Tell RetroArch to load the game from OPFS
   if (GAME_PATH !== null) {
     const module = nostalgist.getEmscripten().Module;
     const args: string[] = module.arguments ?? [];
-    args.push(PERSISTENT_DIRECTORY + "/" + btoa(GAME_PATH) + ".mkxpz");
+    args.push(PERSISTENT_DIRECTORY + "/" + GAME_OPFS_PATH);
     module.arguments = args;
   }
 } else {
