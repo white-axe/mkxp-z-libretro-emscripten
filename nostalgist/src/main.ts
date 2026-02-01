@@ -310,7 +310,7 @@ const [coreJsBlob, coreWasmBlob, gameBlob, rtpBlob] = await Promise.all([
 
 const nostalgist = await Nostalgist.prepare({
   core: {
-    name: CORE_NAME.replace(/-/g, "_"),
+    name: CORE_NAME,
     js: coreJsBlob,
     wasm: coreWasmBlob,
   },
@@ -329,15 +329,8 @@ const nostalgist = await Nostalgist.prepare({
           fileContent: rtpBlob,
         },
   emscriptenModule: {
-    // @ts-expect-error This can be a blob even though Nostalgist.js thinks it can only be a string
-    mainScriptUrlOrBlob: coreJsBlob, // Work around a bug preventing Nostalgist.js from loading threaded cores
     preRun: [
       (module) => {
-        // When RetroArch is built with WasmFS support, there will not be an init() function on the filesystem,
-        // but Nostalgist.js expects there to be one, so create a dummy init function in that case
-        if (typeof module.FS.init !== "function") {
-          module.FS.init = () => {};
-        }
         // Indicate to RetroArch that we want to enable OPFS support if it's supported
         module.ENV.OPFS_MOUNT = PERSISTENT_DIRECTORY;
       },
