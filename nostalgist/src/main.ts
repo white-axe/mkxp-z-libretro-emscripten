@@ -345,6 +345,9 @@ const nostalgist = await Nostalgist.prepare({
     system_directory: HAVE_OPFS
       ? OPFS_SYSTEM_DIRECTORY
       : "/home/web_user/retroarch/userdata/system",
+    log_verbosity: true,
+    libretro_log_level: import.meta.env.DEV ? 0 : 1,
+    frontend_log_level: import.meta.env.DEV ? 0 : 1,
     input_toggle_fast_forward: "space",
     input_hold_fast_forward: "l",
     input_toggle_slowmotion: "g",
