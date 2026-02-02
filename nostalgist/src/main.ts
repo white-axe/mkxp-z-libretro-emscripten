@@ -441,7 +441,7 @@ while (!navigator.userActivation.hasBeenActive) {
   if (prompt !== null) {
     prompt.style.display = "initial";
   }
-  await new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolve) => {
     const events = [
       "keydown",
       "mousedown",
@@ -450,13 +450,8 @@ while (!navigator.userActivation.hasBeenActive) {
       "touchend",
     ];
     const listener = () => {
-      try {
-        for (const ev of events) {
-          document.body.removeEventListener(ev, listener);
-        }
-      } catch (err) {
-        reject(err);
-        return;
+      for (const ev of events) {
+        document.body.removeEventListener(ev, listener);
       }
       resolve();
     };
