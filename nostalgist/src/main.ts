@@ -16,6 +16,11 @@ const HAVE_OPFS =
   typeof import.meta.env.VITE_HAVE_OPFS !== "string" ||
   import.meta.env.VITE_HAVE_OPFS !== "false";
 
+const REQUIRE_OPFS =
+  HAVE_OPFS &&
+  (typeof import.meta.env.VITE_REQUIRE_OPFS !== "string" ||
+    import.meta.env.VITE_REQUIRE_OPFS !== "false");
+
 const CORE_JS_PATH =
   typeof import.meta.env.VITE_CORE_JS_PATH === "string"
     ? new URL(import.meta.env.VITE_CORE_JS_PATH, location.href).toString()
@@ -115,7 +120,7 @@ if (!window.isSecureContext) {
 if (!window.crossOriginIsolated) {
   if (!("serviceWorker" in navigator)) {
     alert(
-      "This site cannot be used in private browsing mode in this browser. Either exit private browsing mode or try private browsing mode in a different browser.",
+      "Your browser does not support service workers in private browsing mode. Either exit private browsing mode or try private browsing mode in a different browser.",
     );
     throw "Service workers are not available";
   }
@@ -138,16 +143,24 @@ if (!window.crossOriginIsolated) {
   throw "Reloading to enable cross-origin isolation";
 }
 
-const opfs = await (async () => {
-  try {
-    return await navigator.storage.getDirectory();
-  } catch (err) {
-    alert(
-      "This site cannot be used in private browsing mode in this browser. Either exit private browsing mode or try private browsing mode in a different browser.",
-    );
-    throw err;
-  }
-})();
+const opfs = !HAVE_OPFS
+  ? null
+  : await (async () => {
+      try {
+        return await navigator.storage.getDirectory();
+      } catch (err) {
+        if (REQUIRE_OPFS) {
+          alert(
+            "Your browser does not support OPFS in private browsing mode. Either exit private browsing mode or try private browsing mode in a different browser.",
+          );
+          throw err;
+        } else {
+          // Fall back to not using OPFS
+          console.error(err);
+          return null;
+        }
+      }
+    })();
 
 const fetchWithCache = async (
   size: number,
@@ -194,7 +207,7 @@ const fetchWithCache = async (
           if (result.blob !== null) {
             blobSource = "indexeddb";
             blob = result.blob;
-          } else if (opfsPath !== undefined) {
+          } else if (opfs !== null && opfsPath !== undefined) {
             let directory = opfs;
             const elements = opfsPath
               .split("/")
@@ -249,16 +262,12 @@ const fetchWithCache = async (
     // Store the blob into IndexedDB and OPFS if needed
     if (
       blobSource !==
-      (HAVE_OPFS && opfsPath !== undefined ? "opfs" : "indexeddb")
+      (opfs !== null && opfsPath !== undefined ? "opfs" : "indexeddb")
     ) {
-      if (!HAVE_OPFS) {
-        opfsPath = undefined;
-      }
-
       try {
         db.cache.put({
           path,
-          blob: opfsPath !== undefined ? null : blob,
+          blob: opfs !== null && opfsPath !== undefined ? null : blob,
           etag: headers.get("ETag"),
           lastModified: headers.get("Last-Modified"),
         });
@@ -266,7 +275,7 @@ const fetchWithCache = async (
         console.error(err);
       }
 
-      if (opfsPath !== undefined) {
+      if (opfs !== null && opfsPath !== undefined) {
         try {
           let directory = opfs;
           const elements = opfsPath
@@ -317,14 +326,14 @@ const nostalgist = await Nostalgist.prepare({
     wasm: coreWasmBlob,
   },
   rom:
-    HAVE_OPFS || GAME_PATH === null || gameBlob === null
+    opfs !== null || GAME_PATH === null || gameBlob === null
       ? undefined
       : {
           fileName: btoa(GAME_PATH) + ".mkxpz",
           fileContent: gameBlob,
         },
   bios:
-    HAVE_OPFS || rtpBlob === null
+    opfs !== null || rtpBlob === null
       ? undefined
       : {
           fileName: "RTP.mkxpz",
@@ -333,7 +342,7 @@ const nostalgist = await Nostalgist.prepare({
   emscriptenModule: {
     preRun: [
       (module) => {
-        if (HAVE_OPFS) {
+        if (opfs !== null) {
           // Indicate to RetroArch that we want to enable OPFS support if it's supported
           module.ENV.OPFS_MOUNT = PERSISTENT_DIRECTORY;
         }
@@ -344,9 +353,10 @@ const nostalgist = await Nostalgist.prepare({
   retroarchConfig: {
     savefile_directory: SAVE_DIRECTORY,
     savestate_directory: STATE_DIRECTORY,
-    system_directory: HAVE_OPFS
-      ? OPFS_SYSTEM_DIRECTORY
-      : "/home/web_user/retroarch/userdata/system",
+    system_directory:
+      opfs !== null
+        ? OPFS_SYSTEM_DIRECTORY
+        : "/home/web_user/retroarch/userdata/system",
     log_verbosity: true,
     libretro_log_level: import.meta.env.DEV ? 0 : 1,
     frontend_log_level: import.meta.env.DEV ? 0 : 1,
@@ -376,7 +386,7 @@ const nostalgist = await Nostalgist.prepare({
 
 const fs = nostalgist.getEmscriptenFS();
 
-if (HAVE_OPFS) {
+if (opfs !== null) {
   // Create the save, state and system directories
   for (const directoryPath of [
     SAVE_DIRECTORY,
@@ -415,7 +425,7 @@ if (HAVE_OPFS) {
 
   // If RetroArch was not built with OPFS support but was built with IDBFS support,
   // persist saves and save states to IndexedDB so that the user doesn't lose all of their saves and save states whenever the page is reloaded or closed
-  if (fs.filesystems?.IDBFS !== undefined) {
+  if ("filesystems" in fs && "IDBFS" in fs.filesystems) {
     fs.mkdirTree(SAVE_DIRECTORY);
     fs.mkdirTree(STATE_DIRECTORY);
     fs.mount(fs.filesystems.IDBFS, { autoPersist: true }, SAVE_DIRECTORY);
