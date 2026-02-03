@@ -467,73 +467,6 @@ while (!navigator.userActivation.hasBeenActive) {
 // Show an on-screen gamepad overlay if the user is using a touchscreen device
 const gamepadTarget = document.getElementById("gamepad-target");
 if (primaryInput === "touch" && gamepadTarget !== null) {
-  const getCode = (input: string) => {
-    const config = nostalgist.getEmulatorOptions().retroarchConfig;
-    const key: string | undefined = config[input];
-    if (key === undefined) {
-      switch (input) {
-        case "input_player1_a":
-          return "KeyZ";
-        case "input_player1_b":
-          return "KeyX";
-        case "input_player1_down":
-          return "ArrowDown";
-        case "input_player1_left":
-          return "ArrowLeft";
-        case "input_player1_right":
-          return "ArrowRight";
-        case "input_player1_up":
-          return "ArrowUp";
-      }
-      return;
-    }
-    if (key.length === 1) {
-      return "Key" + key.toUpperCase();
-    }
-    if (key.startsWith("f") && /^\d+$/.test(key.substring(1))) {
-      return "F" + key.substring(1);
-    }
-    if (key.startsWith("num") && /^\d+$/.test(key.substring(3))) {
-      return "Digit" + key.substring(3);
-    }
-    if (key.startsWith("keypad") && /^\d+$/.test(key.substring(6))) {
-      return "Numpad" + key.substring(6);
-    }
-    switch (key) {
-      case "down":
-        return "ArrowDown";
-      case "left":
-        return "ArrowLeft";
-      case "right":
-        return "ArrowRight";
-      case "up":
-        return "ArrowUp";
-      case "escape":
-        return "Escape";
-      case "backspace":
-        return "Backspace";
-      case "space":
-        return "Space";
-      case "tab":
-        return "Tab";
-      case "enter":
-        return "Enter";
-      case "kp_enter":
-        return "NumpadEnter";
-      case "ctrl":
-        return "ControlLeft";
-      case "rctrl":
-        return "ControlRight";
-      case "shift":
-        return "ShiftLeft";
-      case "rshift":
-        return "ShiftRight";
-      case "alt":
-        return "AltLeft";
-      case "ralt":
-        return "AltRight";
-    }
-  };
   new Gamepad([
     new Button({
       id: "gamepad-x",
@@ -545,10 +478,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "125px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_y"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "y" },
         );
       },
     }),
@@ -562,10 +494,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "75px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_l3"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "l3" },
         );
       },
     }),
@@ -579,10 +510,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "25px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_r3"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "r3" },
         );
       },
     }),
@@ -596,10 +526,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "125px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_x"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "x" },
         );
       },
     }),
@@ -613,10 +542,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "75px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_b"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "b" },
         );
       },
     }),
@@ -630,10 +558,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "25px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_a"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "a" },
         );
       },
     }),
@@ -647,10 +574,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         left: "62.5px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_down"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "down" },
         );
       },
     }),
@@ -664,10 +590,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         left: "25px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_left"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "left" },
         );
       },
     }),
@@ -681,10 +606,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         left: "100px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_right"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "right" },
         );
       },
     }),
@@ -698,10 +622,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         left: "62.5px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_player1_up"),
-          }),
+        (state.isActive ? nostalgist.pressDown : nostalgist.pressUp).call(
+          nostalgist,
+          { button: "up" },
         );
       },
     }),
@@ -715,9 +638,10 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         left: "63px",
       },
       onInput: (state) => {
+        // `nostalgist.sendCommand("SAVE_STATE")` doesn't always work for some reason
         nostalgist.getCanvas().dispatchEvent(
           new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_save_state"),
+            code: "F2",
           }),
         );
       },
@@ -732,11 +656,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         left: "63px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_load_state"),
-          }),
-        );
+        if (state.isActive) {
+          nostalgist.sendCommand("LOAD_STATE");
+        }
       },
     }),
     new Button({
@@ -749,11 +671,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "80px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_toggle_fast_forward"),
-          }),
-        );
+        if (state.isActive) {
+          nostalgist.sendCommand("FAST_FORWARD");
+        }
       },
     }),
     new Button({
@@ -766,11 +686,9 @@ if (primaryInput === "touch" && gamepadTarget !== null) {
         right: "77px",
       },
       onInput: (state) => {
-        nostalgist.getCanvas().dispatchEvent(
-          new KeyboardEvent(state.isActive ? "keydown" : "keyup", {
-            code: getCode("input_toggle_slowmotion"),
-          }),
-        );
+        if (state.isActive) {
+          nostalgist.sendCommand("SLOWMOTION");
+        }
       },
     }),
   ]);

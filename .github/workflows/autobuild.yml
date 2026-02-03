@@ -15,11 +15,6 @@ jobs:
     name: Check Nostalgist.js
     runs-on: ubuntu-slim
     steps:
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -441,11 +436,6 @@ jobs:
     name: Build Nostalgist.js with ${{ matrix.name }}
     runs-on: ubuntu-slim
     steps:
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - name: Checkout
         uses: actions/checkout@v5
         with:
