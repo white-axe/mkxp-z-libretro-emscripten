@@ -2,6 +2,7 @@ import { Button, Gamepad } from "@rbuljan/gamepad";
 import { primaryInput } from "detect-it";
 import { Dexie, type EntityTable } from "dexie";
 import fetchProgress from "fetch-progress";
+import { toBase64 } from "js-base64";
 import { Nostalgist } from "nostalgist";
 import ProgressBar from "progressbar.js";
 import { Spinner } from "spin.js";
@@ -60,7 +61,8 @@ const SAVE_DIRECTORY = PERSISTENT_DIRECTORY + "/saves/" + CORE_NAME;
 const STATE_DIRECTORY = PERSISTENT_DIRECTORY + "/states/" + CORE_NAME;
 const OPFS_SYSTEM_DIRECTORY = PERSISTENT_DIRECTORY + "/system/" + CORE_NAME;
 
-const GAME_OPFS_PATH = GAME_PATH === null ? null : btoa(GAME_PATH) + ".mkxpz";
+const GAME_OPFS_PATH =
+  GAME_PATH === null ? null : toBase64(GAME_PATH, true) + ".mkxpz";
 const RTP_OPFS_PATH =
   RTP_PATH === null
     ? null
@@ -329,7 +331,7 @@ const nostalgist = await Nostalgist.prepare({
     opfs !== null || GAME_PATH === null || gameBlob === null
       ? undefined
       : {
-          fileName: btoa(GAME_PATH) + ".mkxpz",
+          fileName: toBase64(GAME_PATH, true) + ".mkxpz",
           fileContent: gameBlob,
         },
   bios:
