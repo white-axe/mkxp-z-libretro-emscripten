@@ -333,8 +333,10 @@ const nostalgist = await Nostalgist.prepare({
   emscriptenModule: {
     preRun: [
       (module) => {
-        // Indicate to RetroArch that we want to enable OPFS support if it's supported
-        module.ENV.OPFS_MOUNT = PERSISTENT_DIRECTORY;
+        if (HAVE_OPFS) {
+          // Indicate to RetroArch that we want to enable OPFS support if it's supported
+          module.ENV.OPFS_MOUNT = PERSISTENT_DIRECTORY;
+        }
       },
     ],
   },
