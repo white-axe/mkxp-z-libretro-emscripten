@@ -30,11 +30,11 @@ const CORE_WASM_PATH =
   typeof import.meta.env.VITE_CORE_WASM_PATH === "string"
     ? new URL(import.meta.env.VITE_CORE_WASM_PATH, location.href).toString()
     : new URL("./" + CORE_NAME + "_libretro.wasm", location.href).toString();
-const GAME_PATH: string | null =
+const GAME_PATH =
   typeof import.meta.env.VITE_GAME_PATH === "string"
     ? new URL(import.meta.env.VITE_GAME_PATH, location.href).toString()
     : null;
-const RTP_PATH: string | null =
+const RTP_PATH =
   typeof import.meta.env.VITE_RTP_PATH === "string"
     ? new URL(import.meta.env.VITE_RTP_PATH, location.href).toString()
     : null;
@@ -48,7 +48,7 @@ const XP_CONTROLS =
   typeof import.meta.env.VITE_XP_CONTROLS === "string" &&
   import.meta.env.VITE_XP_CONTROLS !== "false";
 
-const GAME_NAME: string | null =
+const GAME_NAME =
   typeof import.meta.env.VITE_GAME_NAME === "string"
     ? import.meta.env.VITE_GAME_NAME
     : null;
