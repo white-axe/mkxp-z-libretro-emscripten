@@ -128,6 +128,41 @@ jobs:
           name: RPGVXAce.mkxpz
           path: RPGVXAce.mkxpz
 
+  download-aetherion:
+    name: Download Aetherion
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl zip 7zip
+
+      - name: Restore game from cache
+        id: cache-game
+        uses: actions/cache@v5
+        with:
+          key: aetherion.zip
+          path: aetherion.zip
+
+      - name: Download game if not cached
+        if: steps.cache-game.outputs.cache-hit != 'true'
+        run: |
+          curl -Lko aetherion.zip https://dl.komodo.jp/rpgmakerweb/free-game-bundle/aetherion.zip
+          [ "$(sha256sum aetherion.zip | cut -d ' ' -f 1)" = 'eeb75a6c99b58634e9dba5b344850bc5880e762b5b89ae45dab15b50cd00c37c' ]
+
+      - name: Pack game files
+        run: |
+          unzip aetherion.zip
+          7z x -oaetherion Aetherion.exe
+          cd aetherion
+          zip -r0 ../aetherion.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aetherion.mkxpz
+          path: aetherion.mkxpz
+
   download-crysalis:
     name: Download Crysalis
     runs-on: ubuntu-slim
@@ -412,6 +447,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: Aetherion
+            id: aetherion
+            rtp: None
+            xp: false
           - name: Crysalis
             id: crysalis
             rtp: RPGVXAce
@@ -430,6 +469,7 @@ jobs:
       - download-rpg-maker-xp-rtp
       - download-rpg-maker-vx-rtp
       - download-rpg-maker-vx-ace-rtp
+      - download-aetherion
       - download-crysalis
       - download-knight-blade-howling-of-kerberos
       - download-star-stealing-prince
@@ -520,6 +560,12 @@ jobs:
         with:
           name: mkxp-z_libretro_retroarch_web_player
           path: dist/retroarch-web-player
+
+      - name: Download Nostalgist.js with Aetherion
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_nostalgist_aetherion
+          path: dist/nostalgist-aetherion
 
       - name: Download Nostalgist.js with Crysalis
         uses: actions/download-artifact@v5

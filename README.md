@@ -2,14 +2,15 @@
 
 This is a website where you can test the proposed libretro builds for [mkxp-z](https://github.com/mkxp-z/mkxp-z) from [mkxp-z pull request 255](https://github.com/mkxp-z/mkxp-z/pull/255) in your browser.
 
-Unlike [mkxp-web](https://github.com/pulsejet/mkxp-web), it uses the reference Ruby VM implementation instead of mruby, so RPG Maker VX Ace games that use Ruby fibers are supported out of the box. There are no special porting steps [like the ones required to play games using mkxp-web](https://github.com/pulsejet/mkxp-web?tab=readme-ov-file#porting-games-to-work-with-mrubywasm); games should be runnable unmodified if mkxp-z can play the game on at least one non-Windows platform.
+Unlike [mkxp-web](https://github.com/pulsejet/mkxp-web), it uses the reference Ruby VM implementation instead of mruby, so RPG Maker VX and RPG Maker VX Ace games are supported out of the box, not only RPG Maker XP games. There are no special porting steps [like the ones required to play games using mkxp-web](https://github.com/pulsejet/mkxp-web?tab=readme-ov-file#porting-games-to-work-with-mrubywasm); games should be runnable unmodified if mkxp-z can play the game on at least one non-Windows platform.
 
 There are multiple different user interfaces available:
 
 * [RetroArch web player](https://white-axe.github.io/mkxp-z-libretro-emscripten/retroarch-web-player/). The reference implementation of a user interface for running libretro cores in web browsers. It allows uploading games of your choice to play. See below for instructions on how to upload games.
-* [Nostalgist.js with Crysalis](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-crysalis/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX Ace sample game Crysalis.
-* [Nostalgist.js with KNight-Blade: Howling of Kerberos](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-knight-blade-howling-of-kerberos/). A user interface using Nostalgist.js preconfigured to play the English version of the RPG Maker XP sample game KNight-Blade: Howling of Kerberos.
-* [Nostalgist.js with Star Stealing Prince](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-star-stealing-prince/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX game Star Stealing Prince.
+* [Nostalgist.js with Aetherion](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-aetherion/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX game [Aetherion](https://rpgmaker.net/games/3410/) by Anaryu, Krisanna and Solitayre. This build serves to demonstrate the running of a game that requires Win32API.
+* [Nostalgist.js with Crysalis](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-crysalis/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX Ace sample game Crysalis. This build serves to demonstrate the running of a game that requires Ruby fibers, which is not possible with mruby due to the [limitations of mruby](https://github.com/mruby/mruby/blob/3.4.0/doc/limitations.md#fiber-execution-cant-cross-c-function-boundary).
+* [Nostalgist.js with KNight-Blade: Howling of Kerberos](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-knight-blade-howling-of-kerberos/). A user interface using Nostalgist.js preconfigured to play the English version of the RPG Maker XP sample game KNight-Blade: Howling of Kerberos, as a sanity check.
+* [Nostalgist.js with Star Stealing Prince](https://white-axe.github.io/mkxp-z-libretro-emscripten/nostalgist-star-stealing-prince/). A user interface using Nostalgist.js preconfigured to play the RPG Maker VX game [Star Stealing Prince](https://starstealingprince.wordpress.com/) by Ronove and Diedrupo. This build serves to demonstrate the running of a game that requires Ruby 1.8 syntax and will not normally run in newer Ruby versions.
 
 ## How to use the RetroArch web player
 
