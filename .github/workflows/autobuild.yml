@@ -384,7 +384,6 @@ jobs:
         run: |
           mv mkxp-z/build/mkxp-z_libretro.a retroarch/libretro_emscripten.a
           cd retroarch
-          git apply ../retroarch.patch
           CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
 
       - name: Upload artifact
