@@ -277,14 +277,14 @@ jobs:
 
       - name: Set up WASI SDK
         run: |
-          curl -Lo ${{ runner.temp }}/wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-29/wasi-sdk-29.0-x86_64-linux.tar.gz
+          curl -Lo ${{ runner.temp }}/wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-x86_64-linux.tar.gz
           mkdir ${{ runner.temp }}/wasi-sdk
           tar -xzf ${{ runner.temp }}/wasi-sdk.tar.gz -C ${{ runner.temp }}/wasi-sdk --strip-components=1
           rm ${{ runner.temp }}/wasi-sdk.tar.gz
 
       - name: Set up Binaryen
         run: |
-          curl -Lo ${{ runner.temp }}/binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/version_125/binaryen-version_125-x86_64-linux.tar.gz
+          curl -Lo ${{ runner.temp }}/binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/version_126/binaryen-version_126-x86_64-linux.tar.gz
           mkdir ${{ runner.temp }}/binaryen
           tar -xzf ${{ runner.temp }}/binaryen.tar.gz -C ${{ runner.temp }}/binaryen --strip-components=1
           rm ${{ runner.temp }}/binaryen.tar.gz
