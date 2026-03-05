@@ -267,7 +267,7 @@ const fetchWithCache = async (
       (opfs !== null && opfsPath !== undefined ? "opfs" : "indexeddb")
     ) {
       try {
-        db.cache.put({
+        await db.cache.put({
           path,
           blob: opfs !== null && opfsPath !== undefined ? null : blob,
           etag: headers.get("ETag"),
