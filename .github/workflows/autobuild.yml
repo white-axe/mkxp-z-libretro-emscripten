@@ -232,6 +232,33 @@ jobs:
           name: knight-blade-howling-of-kerberos.mkxpz
           path: knight-blade-howling-of-kerberos.mkxpz
 
+  download-pokemon-infinity:
+    name: Download Pokémon Infinity
+    runs-on: ubuntu-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl zip
+
+      - name: Download game
+        run: |
+          # https://gist.github.com/CypherpunkSamurai/bf81c9444bfdc35fb285b0815d058b11
+          curl 'https://www.mediafire.com/file/aps6o6i8xnnekng/Infinity_3.3.1.zip/file' | grep -Eo "http.+download.?+\.mediafire\.com.*\" " | sed -e 's|"||g' | xargs curl -Lo pokemon-infinity.zip
+          [ "$(sha256sum pokemon-infinity.zip | cut -d ' ' -f 1)" = '588b049bfb7c49bde2319f9f450904a146e07b79d487cf3fa2fe50fe2ab7bad5' ]
+
+      - name: Pack game files
+        run: |
+          unzip pokemon-infinity.zip
+          cd 'Infinity 3.3.1'
+          zip -r0 ../pokemon-infinity.mkxpz *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokemon-infinity.mkxpz
+          path: pokemon-infinity.mkxpz
+
   download-star-stealing-prince:
     name: Download Star Stealing Prince
     runs-on: ubuntu-slim
@@ -458,6 +485,10 @@ jobs:
             id: knight-blade-howling-of-kerberos
             rtp: Standard
             xp: true
+          - name: Pokémon Infinity
+            id: pokemon-infinity
+            rtp: None
+            xp: true
           - name: Star Stealing Prince
             id: star-stealing-prince
             rtp: None
@@ -471,6 +502,7 @@ jobs:
       - download-aetherion
       - download-crysalis
       - download-knight-blade-howling-of-kerberos
+      - download-pokemon-infinity
       - download-star-stealing-prince
     name: Build Nostalgist.js with ${{ matrix.name }}
     runs-on: ubuntu-slim
@@ -577,6 +609,12 @@ jobs:
         with:
           name: mkxp-z_libretro_nostalgist_knight-blade-howling-of-kerberos
           path: dist/nostalgist-knight-blade-howling-of-kerberos
+
+      - name: Download Nostalgist.js with Pokémon Infinity
+        uses: actions/download-artifact@v5
+        with:
+          name: mkxp-z_libretro_nostalgist_pokemon-infinity
+          path: dist/nostalgist-pokemon-infinity
 
       - name: Download Nostalgist.js with Star Stealing Prince
         uses: actions/download-artifact@v5

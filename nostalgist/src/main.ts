@@ -384,6 +384,9 @@ const nostalgist = await Nostalgist.prepare({
     input_player1_r2: "rshift",
     input_player1_start: "alt",
   },
+  retroarchCoreConfig: {
+    "mkxp-z_saveStateSize": "256",
+  },
 });
 
 const fs = nostalgist.getEmscriptenFS();
