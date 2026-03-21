@@ -250,7 +250,7 @@ jobs:
       - name: Pack game files
         run: |
           unzip pokemon-infinity.zip
-          cd 'Infinity 3.3.1'
+          cd 'Infinity 3.3.2'
           zip -r0 ../pokemon-infinity.mkxpz *
 
       - name: Upload artifact
