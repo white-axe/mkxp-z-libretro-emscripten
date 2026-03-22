@@ -245,7 +245,7 @@ jobs:
         run: |
           # https://gist.github.com/CypherpunkSamurai/bf81c9444bfdc35fb285b0815d058b11
           curl -L 'https://www.mediafire.com/file/8eqz92ekp5ejwrm/Infinity_3.3.2.zip/file' | grep -Eo "http.+download.?+\.mediafire\.com.*\" " | sed -e 's|"||g' | xargs curl -Lo pokemon-infinity.zip
-          [ "$(sha256sum pokemon-infinity.zip | cut -d ' ' -f 1)" = '3ed0b2a4db770dbe97701e83acd08c2cb5ac2f1a4c41436022e02b86e5096b9f' ]
+          [ "$(sha256sum pokemon-infinity.zip | cut -d ' ' -f 1)" = '085c712a7da17610dc4e3c2f0659b5f00ed98751bafef93e392421c22f462f21' ]
 
       - name: Pack game files
         run: |
