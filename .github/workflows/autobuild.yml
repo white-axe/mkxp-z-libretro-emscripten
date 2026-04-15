@@ -364,6 +364,7 @@ jobs:
           echo "c = 'emcc'" | tee -a ${{ runner.temp }}/cross.ini
           echo "cpp = 'em++'" | tee -a ${{ runner.temp }}/cross.ini
           echo "ar = 'emar'" | tee -a ${{ runner.temp }}/cross.ini
+          echo "cmake = 'cmake'" | tee -a ${{ runner.temp }}/cross.ini
           echo "[host_machine]" | tee -a ${{ runner.temp }}/cross.ini
           echo "system = 'emscripten'" | tee -a ${{ runner.temp }}/cross.ini
           echo "cpu_family = 'wasm32'" | tee -a ${{ runner.temp }}/cross.ini
