@@ -139,3 +139,14 @@
  const removeLeadingZipDirs = 1;
  
  // list of directories to migrate. previously these were mounted in the "userdata" directory. retroarch.cfg is ignored intentionally.
+@@ -320,8 +320,8 @@ async function tryLoadBundle() {
+ 	if (await FS.stat(timestampFile) == "file")
+ 		timestamp = new TextDecoder().decode(await FS.readFile(timestampFile));
+ 
+-	let resp = await fetch(bundlePath[0], {headers: {"If-Modified-Since": timestamp, "Cache-Control": "public, max-age=0"}});
+-	if (resp.status == 200) {
++	let resp = await fetch(bundlePath[0], {method: "HEAD", headers: {"Cache-Control": "public, max-age=0"}}); // If coi-serviceworker.js is being used, using the If-Modified-Since header causes NS_ERROR_INTERCEPTION_FAILED in Firefox if the bundle has not been modified since the given timestamp
++	if (resp.status === 200 && resp.headers.get("last-modified") !== timestamp && (resp = await fetch(bundlePath[0], {headers: {"Cache-Control": "public, max-age=0"}})).status === 200) {
+ 		debugLog("Got new bundle");
+ 		timestamp = resp.headers.get("last-modified");
+ 		if (bundlePath.length > 1) {
