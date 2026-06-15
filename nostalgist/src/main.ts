@@ -45,7 +45,7 @@ const GAME_SIZE = parseInt(import.meta.env.VITE_GAME_SIZE);
 const RTP_SIZE = parseInt(import.meta.env.VITE_RTP_SIZE);
 
 const XP_CONTROLS =
-  typeof import.meta.env.VITE_XP_CONTROLS === "string" &&
+  typeof import.meta.env.VITE_XP_CONTROLS !== "string" ||
   import.meta.env.VITE_XP_CONTROLS !== "false";
 
 const GAME_NAME =
