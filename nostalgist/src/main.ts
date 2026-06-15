@@ -53,6 +53,13 @@ const GAME_NAME =
     ? import.meta.env.VITE_GAME_NAME
     : null;
 
+const CACHE_USE_ETAG =
+  typeof import.meta.env.VITE_CACHE_USE_ETAG === "string" &&
+  import.meta.env.VITE_CACHE_USE_ETAG === "true";
+const CACHE_USE_LAST_MODIFIED =
+  typeof import.meta.env.VITE_CACHE_USE_LAST_MODIFIED !== "string" ||
+  import.meta.env.VITE_CACHE_USE_LAST_MODIFIED !== "false";
+
 // This can be arbitrary but needs to have at least two path elements when using OPFS
 const PERSISTENT_DIRECTORY = "/nostalgist/persistent";
 
@@ -176,8 +183,10 @@ const fetchWithCache = async (
   let blobSource: "fetch" | "indexeddb" | "opfs" = "fetch";
 
   let headers = (await fetch(path, { method: "HEAD" })).headers;
-  const etag = headers.get("ETag");
-  const lastModified = headers.get("Last-Modified");
+  const etag = CACHE_USE_ETAG ? headers.get("ETag") : null;
+  const lastModified = CACHE_USE_LAST_MODIFIED
+    ? headers.get("Last-Modified")
+    : null;
 
   const db = new Dexie("nostalgist cache for " + CORE_NAME) as Dexie & {
     cache: EntityTable<
@@ -270,8 +279,10 @@ const fetchWithCache = async (
         await db.cache.put({
           path,
           blob: opfs !== null && opfsPath !== undefined ? null : blob,
-          etag: headers.get("ETag"),
-          lastModified: headers.get("Last-Modified"),
+          etag: CACHE_USE_ETAG ? headers.get("ETag") : null,
+          lastModified: CACHE_USE_LAST_MODIFIED
+            ? headers.get("Last-Modified")
+            : null,
         });
       } catch (err) {
         console.error(err);
