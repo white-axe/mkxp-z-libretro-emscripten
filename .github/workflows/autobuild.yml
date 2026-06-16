@@ -52,6 +52,7 @@ jobs:
         run: |
           innoextract xp_rtp104e.exe
           cd app
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../Standard.mkxpz *
 
       - name: Upload artifact
@@ -87,6 +88,7 @@ jobs:
           unzip vx_rtp102e.zip
           innoextract RPGVX_RTP/Setup.exe
           cd app
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../RPGVX.mkxpz *
 
       - name: Upload artifact
@@ -122,6 +124,7 @@ jobs:
           unzip RPGVXAce_RTP.zip
           innoextract RTP100/Setup.exe
           cd app
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../RPGVXAce.mkxpz *
 
       - name: Upload artifact
@@ -157,6 +160,7 @@ jobs:
           unzip aetherion.zip
           7z x -oaetherion Aetherion.exe
           cd aetherion
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../aetherion.mkxpz *
 
       - name: Upload artifact
@@ -192,6 +196,7 @@ jobs:
           unzip crysalis.zip
           7z x -ocrysalis Crysalis.exe
           cd crysalis
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../crysalis.mkxpz *
 
       - name: Upload artifact
@@ -226,6 +231,7 @@ jobs:
         run: |
           unzip knight-blade-howling-of-kerberos.zip
           cd KN_E
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../knight-blade-howling-of-kerberos.mkxpz *
 
       - name: Upload artifact
@@ -253,6 +259,7 @@ jobs:
         run: |
           unzip pokemon-infinity.zip
           cd 'Infinity 3.3.2'
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../pokemon-infinity.mkxpz *
 
       - name: Upload artifact
@@ -287,6 +294,7 @@ jobs:
         run: |
           unzip star-stealing-prince.zip
           cd StarStealingPrinceFullV.3.2wRTP
+          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
           zip -r0 ../star-stealing-prince.mkxpz *
 
       - name: Upload artifact
