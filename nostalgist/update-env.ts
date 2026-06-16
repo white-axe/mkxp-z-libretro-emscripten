@@ -32,21 +32,31 @@ for (const key of ["CORE_JS", "CORE_WASM", "GAME", "RTP"]) {
 
   const hasher = crypto.createHash("sha256");
   const stream = createReadStream(envPath);
-  const hash = await new Promise<string>((resolve, reject) => {
+  const hash = await (async () => {
     try {
-      stream.on("data", (data) => {
-        hasher.update(data);
+      return await new Promise<string>((resolve, reject) => {
+        stream.on("data", (data) => {
+          hasher.update(data);
+        });
+        stream.on("end", () => {
+          resolve(hasher.digest("hex"));
+        });
+        stream.on("error", (err) => {
+          reject(err);
+        });
       });
-      stream.on("end", () => {
-        resolve(hasher.digest("hex"));
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        stream.close((err) => {
+          if (err === null || err === undefined) {
+            resolve();
+          } else {
+            reject(err);
+          }
+        });
       });
-      stream.on("error", (err) => {
-        reject(err);
-      });
-    } catch (err) {
-      reject(err);
     }
-  });
+  })();
   const envHash = process.env["VITE_" + key + "_HASH"];
   if (hash !== envHash) {
     const file = await fs.open(".env", "a");
