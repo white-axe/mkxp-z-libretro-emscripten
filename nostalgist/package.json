@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "eslint && tsc && vite build",
+    "build": "eslint && tsc && vite build && cp node_modules/coi-serviceworker/coi-serviceworker.min.js dist/",
     "preview": "vite preview",
     "lint": "eslint && tsc",
     "fmt": "prettier . --write"
@@ -26,6 +26,7 @@
   "dependencies": {
     "@fontsource/roboto": "^5.2.10",
     "@rbuljan/gamepad": "^2.0.4",
+    "coi-serviceworker": "^0.1.7",
     "detect-it": "^4.0.1",
     "dexie": "^4.3.0",
     "fetch-progress": "^1.3.0",

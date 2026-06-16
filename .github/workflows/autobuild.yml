@@ -534,8 +534,6 @@ jobs:
 
       - name: Build Nostalgist.js
         run: |
-          mv coi-serviceworker/coi-serviceworker.js nostalgist/public/
-
           mv retroarch/mkxp-z_libretro.js nostalgist/public/
           mv retroarch/mkxp-z_libretro.wasm nostalgist/public/
 
