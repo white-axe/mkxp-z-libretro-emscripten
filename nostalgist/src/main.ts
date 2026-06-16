@@ -22,14 +22,14 @@ const REQUIRE_OPFS =
   (typeof import.meta.env.VITE_REQUIRE_OPFS !== "string" ||
     import.meta.env.VITE_REQUIRE_OPFS !== "false");
 
-const CORE_JS_PATH =
-  typeof import.meta.env.VITE_CORE_JS_PATH === "string"
-    ? new URL(import.meta.env.VITE_CORE_JS_PATH, location.href).toString()
-    : new URL("./" + CORE_NAME + "_libretro.js", location.href).toString();
-const CORE_WASM_PATH =
-  typeof import.meta.env.VITE_CORE_WASM_PATH === "string"
-    ? new URL(import.meta.env.VITE_CORE_WASM_PATH, location.href).toString()
-    : new URL("./" + CORE_NAME + "_libretro.wasm", location.href).toString();
+const CORE_JS_PATH = new URL(
+  import.meta.env.VITE_CORE_JS_PATH,
+  location.href,
+).toString();
+const CORE_WASM_PATH = new URL(
+  import.meta.env.VITE_CORE_WASM_PATH,
+  location.href,
+).toString();
 const GAME_PATH =
   typeof import.meta.env.VITE_GAME_PATH === "string"
     ? new URL(import.meta.env.VITE_GAME_PATH, location.href).toString()
@@ -44,6 +44,23 @@ const CORE_WASM_SIZE = parseInt(import.meta.env.VITE_CORE_WASM_SIZE);
 const GAME_SIZE = parseInt(import.meta.env.VITE_GAME_SIZE);
 const RTP_SIZE = parseInt(import.meta.env.VITE_RTP_SIZE);
 
+const CORE_JS_HASH =
+  typeof import.meta.env.VITE_CORE_JS_HASH === "string"
+    ? import.meta.env.VITE_CORE_JS_HASH
+    : "";
+const CORE_WASM_HASH =
+  typeof import.meta.env.VITE_CORE_WASM_HASH === "string"
+    ? import.meta.env.VITE_CORE_WASM_HASH
+    : "";
+const GAME_HASH =
+  typeof import.meta.env.VITE_GAME_HASH === "string"
+    ? import.meta.env.VITE_GAME_HASH
+    : "";
+const RTP_HASH =
+  typeof import.meta.env.VITE_RTP_HASH === "string"
+    ? import.meta.env.VITE_RTP_HASH
+    : "";
+
 const XP_CONTROLS =
   typeof import.meta.env.VITE_XP_CONTROLS !== "string" ||
   import.meta.env.VITE_XP_CONTROLS !== "false";
@@ -52,13 +69,6 @@ const GAME_NAME =
   typeof import.meta.env.VITE_GAME_NAME === "string"
     ? import.meta.env.VITE_GAME_NAME
     : null;
-
-const CACHE_USE_ETAG =
-  typeof import.meta.env.VITE_CACHE_USE_ETAG === "string" &&
-  import.meta.env.VITE_CACHE_USE_ETAG === "true";
-const CACHE_USE_LAST_MODIFIED =
-  typeof import.meta.env.VITE_CACHE_USE_LAST_MODIFIED !== "string" ||
-  import.meta.env.VITE_CACHE_USE_LAST_MODIFIED !== "false";
 
 // This can be arbitrary but needs to have at least two path elements when using OPFS
 const PERSISTENT_DIRECTORY = "/nostalgist/persistent";
@@ -173,6 +183,7 @@ const opfs = !HAVE_OPFS
 
 const fetchWithCache = async (
   size: number,
+  hash: string,
   path: string,
   opfsPath?: string,
 ) => {
@@ -182,67 +193,52 @@ const fetchWithCache = async (
   let blob: Blob | undefined = undefined;
   let blobSource: "fetch" | "indexeddb" | "opfs" = "fetch";
 
-  let headers = (await fetch(path, { method: "HEAD" })).headers;
-  const etag = CACHE_USE_ETAG ? headers.get("ETag") : null;
-  const lastModified = CACHE_USE_LAST_MODIFIED
-    ? headers.get("Last-Modified")
-    : null;
-
   const db = new Dexie("nostalgist cache for " + CORE_NAME) as Dexie & {
     cache: EntityTable<
       {
         path: string;
         blob: Blob | null;
-        etag: string | null;
-        lastModified: string | null;
+        hash: string;
       },
       "path"
     >;
   };
-  db.version(1).stores({
+  db.version(2).stores({
     cache: "path",
   });
 
   try {
     // Try restoring the blob from IndexedDB and OPFS
-    if (etag !== null || lastModified !== null) {
-      try {
-        const result = await db.cache.get(path);
-        if (
-          result !== undefined &&
-          (etag !== null
-            ? result.etag === etag
-            : result.lastModified === lastModified) &&
-          (result.blob === null || result.blob.size === size)
-        ) {
-          if (result.blob !== null) {
-            blobSource = "indexeddb";
-            blob = result.blob;
-          } else if (opfs !== null && opfsPath !== undefined) {
-            let directory = opfs;
-            const elements = opfsPath
-              .split("/")
-              .filter((element) => element.length !== 0);
-            if (elements.length > 0) {
-              for (const element of elements.slice(0, -1)) {
-                directory = await directory.getDirectoryHandle(element, {
-                  create: true,
-                });
-              }
-              const fileHandle = await directory.getFileHandle(
-                elements.slice(-1)[0],
-              );
-              const fileBlob = await fileHandle.getFile();
-              if (fileBlob.size === size) {
-                blobSource = "opfs";
-                blob = fileBlob;
-              }
+    try {
+      const result = await db.cache.get(path);
+      if (result !== undefined && result.hash === hash) {
+        if (result.blob !== null) {
+          blobSource = "indexeddb";
+          blob = result.blob;
+        } else if (opfs !== null && opfsPath !== undefined) {
+          let directory = opfs;
+          const elements = opfsPath
+            .split("/")
+            .filter((element) => element.length !== 0);
+          if (elements.length > 0) {
+            for (const element of elements.slice(0, -1)) {
+              directory = await directory.getDirectoryHandle(element, {
+                create: true,
+              });
+            }
+            const fileHandle = await directory.getFileHandle(
+              elements.slice(-1)[0],
+            );
+            const fileBlob = await fileHandle.getFile();
+            if (fileBlob.size === size) {
+              blobSource = "opfs";
+              blob = fileBlob;
             }
           }
         }
-      } catch (err) {
-        console.error(err);
       }
+    } catch (err) {
+      console.error(err);
     }
 
     // If the blob is not cached, fetch it instead
@@ -263,7 +259,6 @@ const fetchWithCache = async (
         }),
       );
 
-      headers = response.headers;
       blob = await response.blob();
     } else {
       currentBytes += size;
@@ -279,10 +274,7 @@ const fetchWithCache = async (
         await db.cache.put({
           path,
           blob: opfs !== null && opfsPath !== undefined ? null : blob,
-          etag: CACHE_USE_ETAG ? headers.get("ETag") : null,
-          lastModified: CACHE_USE_LAST_MODIFIED
-            ? headers.get("Last-Modified")
-            : null,
+          hash,
         });
       } catch (err) {
         console.error(err);
@@ -322,14 +314,19 @@ const fetchWithCache = async (
 };
 
 const [coreJsBlob, coreWasmBlob, gameBlob, rtpBlob] = await Promise.all([
-  fetchWithCache(CORE_JS_SIZE, CORE_JS_PATH),
-  fetchWithCache(CORE_WASM_SIZE, CORE_WASM_PATH),
+  fetchWithCache(CORE_JS_SIZE, CORE_JS_HASH, CORE_JS_PATH),
+  fetchWithCache(CORE_WASM_SIZE, CORE_WASM_HASH, CORE_WASM_PATH),
   GAME_PATH === null
     ? null
-    : fetchWithCache(GAME_SIZE, GAME_PATH, GAME_OPFS_PATH ?? undefined),
+    : fetchWithCache(
+        GAME_SIZE,
+        GAME_HASH,
+        GAME_PATH,
+        GAME_OPFS_PATH ?? undefined,
+      ),
   RTP_PATH === null
     ? null
-    : fetchWithCache(RTP_SIZE, RTP_PATH, RTP_OPFS_PATH ?? undefined),
+    : fetchWithCache(RTP_SIZE, RTP_HASH, RTP_PATH, RTP_OPFS_PATH ?? undefined),
 ]);
 
 const nostalgist = await Nostalgist.prepare({
