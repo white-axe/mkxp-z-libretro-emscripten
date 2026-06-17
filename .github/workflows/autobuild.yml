@@ -33,7 +33,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl innoextract
+          sudo apt install -y curl python3-pip innoextract
+          pip3 install rpzip
 
       - name: Restore run time package from cache
         id: cache-rtp
@@ -52,8 +53,7 @@ jobs:
         run: |
           innoextract xp_rtp104e.exe
           cd app
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../Standard.mkxpz *
+          rpzip -r ../Standard.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -68,7 +68,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip innoextract
+          sudo apt install -y curl python3-pip innoextract
+          pip3 install rpzip
 
       - name: Restore run time package from cache
         id: cache-rtp
@@ -88,8 +89,7 @@ jobs:
           unzip vx_rtp102e.zip
           innoextract RPGVX_RTP/Setup.exe
           cd app
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../RPGVX.mkxpz *
+          rpzip -r ../RPGVX.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -104,7 +104,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip innoextract
+          sudo apt install -y curl python3-pip innoextract
+          pip3 install rpzip
 
       - name: Restore run time package from cache
         id: cache-rtp
@@ -124,8 +125,7 @@ jobs:
           unzip RPGVXAce_RTP.zip
           innoextract RTP100/Setup.exe
           cd app
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../RPGVXAce.mkxpz *
+          rpzip -r ../RPGVXAce.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -140,7 +140,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip 7zip
+          sudo apt install -y curl python3-pip 7zip
+          pip3 install rpzip
 
       - name: Restore game from cache
         id: cache-game
@@ -160,8 +161,7 @@ jobs:
           unzip aetherion.zip
           7z x -oaetherion Aetherion.exe
           cd aetherion
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../aetherion.mkxpz *
+          rpzip -r ../aetherion.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -176,7 +176,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip 7zip
+          sudo apt install -y curl python3-pip 7zip
+          pip3 install rpzip
 
       - name: Restore game from cache
         id: cache-game
@@ -196,8 +197,7 @@ jobs:
           unzip crysalis.zip
           7z x -ocrysalis Crysalis.exe
           cd crysalis
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../crysalis.mkxpz *
+          rpzip -r ../crysalis.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -212,7 +212,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip
+          sudo apt install -y curl python3-pip
+          pip3 install rpzip
 
       - name: Restore game from cache
         id: cache-game
@@ -231,8 +232,7 @@ jobs:
         run: |
           unzip knight-blade-howling-of-kerberos.zip
           cd KN_E
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../knight-blade-howling-of-kerberos.mkxpz *
+          rpzip -r ../knight-blade-howling-of-kerberos.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -247,7 +247,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip
+          sudo apt install -y curl python3-pip
+          pip3 install rpzip
 
       - name: Download game
         run: |
@@ -259,8 +260,7 @@ jobs:
         run: |
           unzip pokemon-infinity.zip
           cd 'Infinity 3.3.2'
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../pokemon-infinity.mkxpz *
+          rpzip -r ../pokemon-infinity.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -275,7 +275,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y curl zip
+          sudo apt install -y curl python3-pip
+          pip3 install rpzip
 
       - name: Restore game from cache
         id: cache-game
@@ -294,8 +295,7 @@ jobs:
         run: |
           unzip star-stealing-prince.zip
           cd StarStealingPrinceFullV.3.2wRTP
-          find . -exec touch -d 1970-01-01T00:00:00Z {} \; # To make the output file reproducible
-          zip -r0 ../star-stealing-prince.mkxpz *
+          rpzip -r ../star-stealing-prince.mkxpz *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
