@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
     "@types/progressbar.js": "^1.1.7",
     "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
@@ -26,7 +27,6 @@
   "dependencies": {
     "@fontsource/roboto": "^5.2.10",
     "@rbuljan/gamepad": "^2.0.4",
-    "@types/node": "^25.9.3",
     "coi-serviceworker": "^0.1.7",
     "detect-it": "^4.0.1",
     "dexie": "^4.3.0",
