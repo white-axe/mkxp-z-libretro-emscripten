@@ -397,8 +397,6 @@ const nostalgist = await Nostalgist.prepare({
   },
 });
 
-const fs = nostalgist.getEmscriptenFS();
-
 if (opfs !== null) {
   // Create the save, state and system directories
   for (const directoryPath of [
@@ -425,6 +423,13 @@ if (opfs !== null) {
     module.arguments = args;
   }
 } else {
+  const fs: typeof FS & {
+    filesystems?: {
+      MEMFS: Emscripten.FileSystemType;
+      IDBFS?: Emscripten.FileSystemType;
+    };
+  } = nostalgist.getEmscriptenFS();
+
   // Move the RTP to the correct path
   if (RTP_PATH !== null) {
     const system_directory = "/home/web_user/retroarch/userdata/system";
@@ -438,7 +443,7 @@ if (opfs !== null) {
 
   // If RetroArch was not built with OPFS support but was built with IDBFS support,
   // persist saves and save states to IndexedDB so that the user doesn't lose all of their saves and save states whenever the page is reloaded or closed
-  if ("filesystems" in fs && "IDBFS" in fs.filesystems) {
+  if (fs.filesystems?.IDBFS !== undefined) {
     fs.mkdirTree(SAVE_DIRECTORY);
     fs.mkdirTree(STATE_DIRECTORY);
     fs.mount(fs.filesystems.IDBFS, { autoPersist: true }, SAVE_DIRECTORY);
