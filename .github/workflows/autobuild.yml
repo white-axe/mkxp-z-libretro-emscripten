@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Check
         run: |
@@ -38,7 +38,7 @@ jobs:
 
       - name: Restore run time package from cache
         id: cache-rtp
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: xp_rtp104e.exe
           path: xp_rtp104e.exe
@@ -56,7 +56,7 @@ jobs:
           rpzip -r ../Standard.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Standard.mkxpz
           path: Standard.mkxpz
@@ -73,7 +73,7 @@ jobs:
 
       - name: Restore run time package from cache
         id: cache-rtp
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: vx_rtp102e.zip
           path: vx_rtp102e.zip
@@ -92,7 +92,7 @@ jobs:
           rpzip -r ../RPGVX.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RPGVX.mkxpz
           path: RPGVX.mkxpz
@@ -109,7 +109,7 @@ jobs:
 
       - name: Restore run time package from cache
         id: cache-rtp
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: RPGVXAce_RTP.zip
           path: RPGVXAce_RTP.zip
@@ -128,7 +128,7 @@ jobs:
           rpzip -r ../RPGVXAce.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RPGVXAce.mkxpz
           path: RPGVXAce.mkxpz
@@ -145,7 +145,7 @@ jobs:
 
       - name: Restore game from cache
         id: cache-game
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: aetherion.zip
           path: aetherion.zip
@@ -164,7 +164,7 @@ jobs:
           rpzip -r ../aetherion.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: aetherion.mkxpz
           path: aetherion.mkxpz
@@ -181,7 +181,7 @@ jobs:
 
       - name: Restore game from cache
         id: cache-game
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: crysalis.zip
           path: crysalis.zip
@@ -200,7 +200,7 @@ jobs:
           rpzip -r ../crysalis.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: crysalis.mkxpz
           path: crysalis.mkxpz
@@ -217,7 +217,7 @@ jobs:
 
       - name: Restore game from cache
         id: cache-game
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: knight-blade-howling-of-kerberos.zip
           path: knight-blade-howling-of-kerberos.zip
@@ -235,7 +235,7 @@ jobs:
           rpzip -r ../knight-blade-howling-of-kerberos.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: knight-blade-howling-of-kerberos.mkxpz
           path: knight-blade-howling-of-kerberos.mkxpz
@@ -252,7 +252,7 @@ jobs:
 
       - name: Restore game from cache
         id: cache-game
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: star-stealing-prince.zip
           path: star-stealing-prince.zip
@@ -270,7 +270,7 @@ jobs:
           rpzip -r ../star-stealing-prince.mkxpz *
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: star-stealing-prince.mkxpz
           path: star-stealing-prince.mkxpz
@@ -299,7 +299,7 @@ jobs:
           rm ${{ runner.temp }}/binaryen.tar.gz
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -309,7 +309,7 @@ jobs:
           CLICOLOR_FORCE=1 make -j $(nproc) WASI_SDK=${{ runner.temp }}/wasi-sdk WASM_OPT=${{ runner.temp }}/binaryen/bin/wasm-opt
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: stage1
           path: mkxp-z/libretro/build/libretro-stage1
@@ -330,12 +330,12 @@ jobs:
           version: 4.0.8
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Download stage 1
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: stage1
           path: mkxp-z/libretro/build/libretro-stage1
@@ -364,7 +364,7 @@ jobs:
           CLICOLOR_FORCE=1 ninja -v
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mkxp-z_libretro.a
           path: mkxp-z/build/mkxp-z_libretro.a
@@ -380,12 +380,12 @@ jobs:
           version: 4.0.8
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Download core
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro.a
           path: mkxp-z/build
@@ -397,7 +397,7 @@ jobs:
           CLICOLOR_FORCE=1 emmake make -f Makefile.emscripten LIBRETRO=mkxp-z HAVE_THREADS=1 PROXY_TO_PTHREAD=1 HAVE_AUDIOWORKLET=1 HAVE_RWEBAUDIO=0 HAVE_AL=0 HAVE_WASMFS=1 HAVE_EXTRA_WASMFS=1
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mkxp-z_libretro.wasm
           path: |
@@ -410,12 +410,12 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Download core + frontend
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro.wasm
           path: retroarch
@@ -446,7 +446,7 @@ jobs:
           git apply ../retroarch.patch
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mkxp-z_libretro_retroarch_web_player
           path: retroarch/pkg/emscripten/libretro-thread
@@ -486,24 +486,24 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Download core + frontend
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro.wasm
           path: retroarch
 
       - name: Download game
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.id }}.mkxpz
 
       - name: Download run time package
         if: matrix.rtp != 'None'
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.rtp }}.mkxpz
 
@@ -533,7 +533,7 @@ jobs:
           npm run build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mkxp-z_libretro_nostalgist_${{ matrix.id }}
           path: nostalgist/dist
@@ -551,7 +551,7 @@ jobs:
           sudo apt install -y pandoc
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Generate index.html
         run: |
@@ -561,37 +561,37 @@ jobs:
           echo '</body></html>' >> dist/index.html
 
       - name: Download RetroArch web player
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro_retroarch_web_player
           path: dist/retroarch-web-player
 
       - name: Download Nostalgist.js with Aetherion
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro_nostalgist_aetherion
           path: dist/nostalgist-aetherion
 
       - name: Download Nostalgist.js with Crysalis
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro_nostalgist_crysalis
           path: dist/nostalgist-crysalis
 
       - name: 'Download Nostalgist.js with KNight-Blade: Howling of Kerberos'
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro_nostalgist_knight-blade-howling-of-kerberos
           path: dist/nostalgist-knight-blade-howling-of-kerberos
 
       - name: Download Nostalgist.js with Star Stealing Prince
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: mkxp-z_libretro_nostalgist_star-stealing-prince
           path: dist/nostalgist-star-stealing-prince
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
           retention-days: 90
@@ -608,6 +608,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-slim
     steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
