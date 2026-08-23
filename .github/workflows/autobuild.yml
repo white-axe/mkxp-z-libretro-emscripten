@@ -604,7 +604,7 @@ jobs:
       group: pages
       cancel-in-progress: false
     environment:
-      name: github-actions
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-slim
     steps:
