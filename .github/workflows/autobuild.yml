@@ -603,6 +603,9 @@ jobs:
     concurrency:
       group: pages
       cancel-in-progress: false
+    environment:
+      name: github-actions
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-slim
     steps:
       - name: Deploy to GitHub Pages
